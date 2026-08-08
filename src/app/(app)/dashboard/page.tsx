@@ -1,30 +1,41 @@
 import type { Metadata } from 'next';
-import { LayoutDashboard } from 'lucide-react';
-import { EmptyState } from '@/components/shared/empty-state';
-import { PageHeader } from '@/components/shared/page-header';
+import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { listClassesAction } from '@/features/classes/actions';
+import { getAdminDashboardDataAction, getStudentDashboardDataAction } from '@/features/dashboard/actions';
+import { AdminDashboard } from '@/features/dashboard/admin-dashboard';
+import { ProfessorDashboard } from '@/features/dashboard/professor-dashboard';
+import { StudentDashboard } from '@/features/dashboard/student-dashboard';
 
 export const metadata: Metadata = { title: 'Início — Trilho do Vencedor' };
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  const firstName = user?.memberName?.split(' ')[0] ?? user?.email ?? '';
+  if (!user) redirect('/login');
+
+  if (user.isAdmin) {
+    const data = await getAdminDashboardDataAction();
+    return <AdminDashboard data={data} />;
+  }
+
+  if (user.role === 'PROFESSOR') {
+    const allClasses = await listClassesAction();
+    const upcomingClasses = allClasses.filter((c) => user.teacherCourseIds.includes(c.course_id));
+    return <ProfessorDashboard nome={user.memberName ?? ''} upcomingClasses={upcomingClasses} />;
+  }
+
+  if (user.role === 'ALUNO') {
+    const data = await getStudentDashboardDataAction();
+    if (data) return <StudentDashboard data={data} />;
+  }
 
   return (
-    <div>
-      <PageHeader
-        title={`Olá, ${firstName}.`}
-        description="Este é o painel inicial — os indicadores completos chegam na próxima etapa do projeto."
-      />
-      <EmptyState
-        icon={LayoutDashboard}
-        title="Dashboard em construção"
-        description={
-          user?.role === 'ALUNO'
-            ? 'Em breve você verá aqui seu curso, próxima aula, presenças e faltas.'
-            : 'Em breve você verá aqui os indicadores de alunos, presença e faltas.'
-        }
-      />
+    <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-sm">
+      <h1 className="text-lg font-semibold text-foreground">Acesso ainda não liberado</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Seu login está ativo, mas ainda não há matrícula, turma ou permissão de administrador
+        vinculada a este usuário. Fale com a administração do Trilho do Vencedor.
+      </p>
     </div>
   );
 }
