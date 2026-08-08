@@ -5,10 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import {
   forgotPasswordSchema,
   loginSchema,
-  resetPasswordSchema,
   type ForgotPasswordInput,
   type LoginInput,
-  type ResetPasswordInput,
 } from '@/validations/auth';
 
 export interface ActionResult {
@@ -66,25 +64,6 @@ export async function requestPasswordResetAction(
     success: true,
     message: 'Se este e-mail estiver cadastrado, enviamos um link para redefinir a senha.',
   };
-}
-
-export async function updatePasswordAction(input: ResetPasswordInput): Promise<ActionResult> {
-  const parsed = resetPasswordSchema.safeParse(input);
-  if (!parsed.success) {
-    return { success: false, message: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Não foi possível redefinir a senha. Solicite um novo link.',
-    };
-  }
-
-  return { success: true, message: 'Senha redefinida com sucesso.' };
 }
 
 export async function signOutAction(): Promise<void> {

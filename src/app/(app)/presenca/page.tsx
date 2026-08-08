@@ -1,22 +1,28 @@
 import type { Metadata } from 'next';
-import { ClipboardCheck } from 'lucide-react';
-import { EmptyState } from '@/components/shared/empty-state';
 import { PageHeader } from '@/components/shared/page-header';
+import { ManualCheckinForm, TokenCheckinPrompt } from '@/features/attendance/checkin-form';
 
 export const metadata: Metadata = { title: 'Registrar presença — Trilho do Vencedor' };
 
-export default function PresencaPage() {
+export default async function PresencaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const { token } = await searchParams;
+
   return (
-    <div>
+    <div className="mx-auto max-w-sm">
       <PageHeader
         title="Registrar presença"
-        description="Digite o código da chamada ou escaneie o QR Code."
+        description={
+          token
+            ? undefined
+            : 'Digite o código de 6 dígitos que o professor projetou, ou escaneie o QR Code da aula.'
+        }
       />
-      <EmptyState
-        icon={ClipboardCheck}
-        title="Registro de presença em construção"
-        description="O fluxo de check-in com todas as validações de segurança chega na Fase 3."
-      />
+
+      {token ? <TokenCheckinPrompt token={token} /> : <ManualCheckinForm />}
     </div>
   );
 }

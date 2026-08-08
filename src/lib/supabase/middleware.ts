@@ -46,11 +46,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
   if (!user && !isPublicPath(pathname)) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    // Preserva a query string (ex.: /presenca?token=...) para o aluno
+    // voltar direto pra tela de check-in depois de logar, em vez de
+    // cair no dashboard e perder o link da chamada.
+    loginUrl.searchParams.set('redirect', `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
