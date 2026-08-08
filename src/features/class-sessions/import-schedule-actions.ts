@@ -14,6 +14,7 @@ export interface ImportScheduleResult {
   total: number;
   imported: number;
   modulesCreated: number;
+  titlesUpdated: number;
   skipped: { row: number; message: string }[];
   errors: { row: number; message: string }[];
 }
@@ -23,8 +24,12 @@ export interface ImportScheduleResult {
  * linhas = 1 módulo, seguindo o "numero" de cada linha) E já agenda
  * cada aula na turma escolhida, num único upload. Idempotente: se o
  * módulo já existe no curso (mesmo module_number/lesson_number), reusa
- * em vez de tentar recriar; se a aula já está agendada nesta turma
- * (mesmo lesson_template_id), pula em vez de duplicar.
+ * o id em vez de tentar recriar — mas o CSV é sempre a fonte da
+ * verdade para o título: se o título já salvo divergir do CSV (ex.:
+ * sobrou um título de seed de desenvolvimento), atualiza para o do
+ * CSV em vez de silenciosamente manter o antigo. Se a aula já está
+ * agendada nesta turma (mesmo lesson_template_id), pula em vez de
+ * duplicar.
  */
 export async function importCourseScheduleAction(
   cohortId: string,
@@ -38,6 +43,7 @@ export async function importCourseScheduleAction(
       total: rows.length,
       imported: 0,
       modulesCreated: 0,
+      titlesUpdated: 0,
       skipped: [],
       errors: [],
     };
@@ -59,6 +65,7 @@ export async function importCourseScheduleAction(
       total: rows.length,
       imported: 0,
       modulesCreated: 0,
+      titlesUpdated: 0,
       skipped: [],
       errors: [],
     };
@@ -66,11 +73,14 @@ export async function importCourseScheduleAction(
 
   const { data: existingLessons } = await supabase
     .from('lesson_templates')
-    .select('id, module_number, lesson_number')
+    .select('id, module_number, lesson_number, title')
     .eq('course_id', cohort.course_id);
 
   const lessonIdByPosition = new Map<string, string>(
     (existingLessons ?? []).map((l) => [`${l.module_number}-${l.lesson_number}`, l.id]),
+  );
+  const lessonTitleById = new Map<string, string>(
+    (existingLessons ?? []).map((l) => [l.id, l.title]),
   );
 
   const { data: existingSessions } = await supabase
@@ -95,15 +105,16 @@ export async function importCourseScheduleAction(
   const errors: ImportScheduleResult['errors'] = [];
   const skipped: ImportScheduleResult['skipped'] = [];
   let modulesCreated = 0;
+  let titlesUpdated = 0;
   let imported = 0;
 
   for (const [moduleNumber, { lesson1, lesson2 }] of [...byModule.entries()].sort(
     (a, b) => a[0] - b[0],
   )) {
-    const lesson1Existing = lessonIdByPosition.get(`${moduleNumber}-1`);
-    const lesson2Existing = lessonIdByPosition.get(`${moduleNumber}-2`);
+    let lesson1Id = lessonIdByPosition.get(`${moduleNumber}-1`);
+    let lesson2Id = lessonIdByPosition.get(`${moduleNumber}-2`);
 
-    if (!lesson1Existing || !lesson2Existing) {
+    if (!lesson1Id || !lesson2Id) {
       if (!lesson1 || !lesson2) {
         const presentRow = lesson1 ?? lesson2;
         errors.push({
@@ -127,15 +138,41 @@ export async function importCourseScheduleAction(
 
       const result = (data as AddModuleResult[])[0];
       if (result) {
-        lessonIdByPosition.set(`${moduleNumber}-1`, result.lesson1_id);
-        lessonIdByPosition.set(`${moduleNumber}-2`, result.lesson2_id);
+        lesson1Id = result.lesson1_id;
+        lesson2Id = result.lesson2_id;
+        lessonIdByPosition.set(`${moduleNumber}-1`, lesson1Id);
+        lessonIdByPosition.set(`${moduleNumber}-2`, lesson2Id);
+        lessonTitleById.set(lesson1Id, lesson1.titulo);
+        lessonTitleById.set(lesson2Id, lesson2.titulo);
         modulesCreated += 1;
+      }
+    } else {
+      // Módulo já existia — o CSV manda no título. Sincroniza se divergir
+      // (cobre exatamente o caso de sobra de seed de desenvolvimento).
+      for (const [lessonId, row] of [
+        [lesson1Id, lesson1],
+        [lesson2Id, lesson2],
+      ] as const) {
+        if (!row) continue;
+        const currentTitle = lessonTitleById.get(lessonId);
+        if (currentTitle !== undefined && currentTitle !== row.titulo) {
+          const { error: titleError } = await supabase.rpc('trilho_update_lesson_template', {
+            p_id: lessonId,
+            p_title: row.titulo,
+          });
+          if (titleError) {
+            errors.push({ row: row.numero, message: friendlyRpcError(titleError.message) });
+          } else {
+            lessonTitleById.set(lessonId, row.titulo);
+            titlesUpdated += 1;
+          }
+        }
       }
     }
 
     for (const row of [lesson1, lesson2]) {
       if (!row) continue;
-      const lessonId = lessonIdByPosition.get(`${moduleNumber}-${row.numero % 2 === 1 ? 1 : 2}`);
+      const lessonId = row.numero % 2 === 1 ? lesson1Id : lesson2Id;
       if (!lessonId) {
         errors.push({ row: row.numero, message: 'Não foi possível resolver a aula do módulo.' });
         continue;
@@ -170,14 +207,19 @@ export async function importCourseScheduleAction(
   revalidatePath(`/turmas/${cohortId}`);
   revalidatePath('/cursos');
 
-  const message = `${imported} aula(s) agendada(s)${modulesCreated > 0 ? `, ${modulesCreated} módulo(s) novo(s) criado(s)` : ''}${skipped.length > 0 ? `, ${skipped.length} já existia(m)` : ''}${errors.length > 0 ? `, ${errors.length} com erro` : ''}.`;
+  const parts = [`${imported} aula(s) agendada(s)`];
+  if (modulesCreated > 0) parts.push(`${modulesCreated} módulo(s) novo(s) criado(s)`);
+  if (titlesUpdated > 0) parts.push(`${titlesUpdated} título(s) atualizado(s)`);
+  if (skipped.length > 0) parts.push(`${skipped.length} já existia(m)`);
+  if (errors.length > 0) parts.push(`${errors.length} com erro`);
 
   return {
     success: errors.length === 0,
-    message,
+    message: `${parts.join(', ')}.`,
     total: rows.length,
     imported,
     modulesCreated,
+    titlesUpdated,
     skipped,
     errors,
   };
