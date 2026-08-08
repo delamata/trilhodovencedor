@@ -25,13 +25,16 @@ export const metadata: Metadata = {
     title: 'Trilho do Vencedor',
   },
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
+    icon: [
+      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icon-180.png',
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#1b2344',
+  themeColor: '#3261af',
   width: 'device-width',
   initialScale: 1,
 };

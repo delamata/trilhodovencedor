@@ -12,8 +12,9 @@ import {
 import { formatDate } from '@/lib/format';
 import type { PresenceByClassPoint } from '@/lib/domain/dashboard-metrics';
 
-// Hue sequencial único (azul) — uma métrica de magnitude, uma série.
-const BAR_COLOR = '#2a78d6';
+// Hue sequencial único (azul da marca) — uma métrica de magnitude, uma
+// série. Usa a CSS var direto (não um hex fixo) para acompanhar o modo escuro.
+const BAR_COLOR = 'var(--brand-blue)';
 
 function ChartTooltip({
   active,

@@ -7,6 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-navy: var(--brand-navy);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
@@ -49,51 +53,65 @@
 }
 
 :root {
-  /* Trilho do Vencedor — paleta navy/azul, fundo cinza muito claro,
-     cards brancos, bordas discretas. Mesmo navy (#1B2344) usado no app
-     Oikos, por continuidade visual. */
+  /* Trilho do Vencedor — identidade extraída da logo da Videira
+     (assets/logo-videira.png no repo do Oikos): gradiente
+     teal → azul → roxo no símbolo, "Videira" em navy #191E3B.
+     Cores amostradas direto dos pixels da logo (ver
+     public/videira-icon.png), não estimadas visualmente. */
+  --brand-teal: #32b5ab;
+  --brand-blue: #3261af;
+  --brand-purple: #5d267a;
+  --brand-navy: #191e3b;
+  --brand-gradient: linear-gradient(135deg, var(--brand-teal), var(--brand-blue) 55%, var(--brand-purple));
+
   --background: #f6f7fb;
-  --foreground: #1a1f36;
+  --foreground: var(--brand-navy);
   --card: #ffffff;
-  --card-foreground: #1a1f36;
+  --card-foreground: var(--brand-navy);
   --popover: #ffffff;
-  --popover-foreground: #1a1f36;
-  --primary: #1b2344;
+  --popover-foreground: var(--brand-navy);
+  --primary: var(--brand-blue);
   --primary-foreground: #ffffff;
   --secondary: #eef1f8;
-  --secondary-foreground: #1b2344;
+  --secondary-foreground: var(--brand-navy);
   --muted: #f1f3f8;
   --muted-foreground: #667085;
   --accent: #e8ecf7;
-  --accent-foreground: #1b2344;
+  --accent-foreground: var(--brand-navy);
   --destructive: #dc2626;
   --border: #e4e7ee;
   --input: #e4e7ee;
-  --ring: #3b5fdd;
-  --chart-1: #149c88;
-  --chart-2: #3b5fdd;
+  --ring: var(--brand-blue);
+  --chart-1: var(--brand-teal);
+  --chart-2: var(--brand-blue);
   --chart-3: #f59e0b;
-  --chart-4: #ef4444;
+  --chart-4: var(--brand-purple);
   --chart-5: #94a3b8;
   --radius: 0.75rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #1a1f36;
-  --sidebar-primary: #1b2344;
+  --sidebar-foreground: var(--brand-navy);
+  --sidebar-primary: var(--brand-blue);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #eef1f8;
-  --sidebar-accent-foreground: #1b2344;
+  --sidebar-accent-foreground: var(--brand-navy);
   --sidebar-border: #e4e7ee;
-  --sidebar-ring: #3b5fdd;
+  --sidebar-ring: var(--brand-blue);
 }
 
 .dark {
+  --brand-teal: #3fcabd;
+  --brand-blue: #6f93d8;
+  --brand-purple: #9a5dc2;
+  --brand-navy: #191e3b;
+  --brand-gradient: linear-gradient(135deg, var(--brand-teal), var(--brand-blue) 55%, var(--brand-purple));
+
   --background: #0f1424;
   --foreground: #e7e9f2;
   --card: #171d33;
   --card-foreground: #e7e9f2;
   --popover: #171d33;
   --popover-foreground: #e7e9f2;
-  --primary: #6b84e8;
+  --primary: var(--brand-blue);
   --primary-foreground: #0f1424;
   --secondary: #232a47;
   --secondary-foreground: #e7e9f2;
@@ -104,20 +122,20 @@
   --destructive: #f87171;
   --border: #2a3155;
   --input: #2a3155;
-  --ring: #6b84e8;
-  --chart-1: #34d3b8;
-  --chart-2: #6b84e8;
+  --ring: var(--brand-blue);
+  --chart-1: var(--brand-teal);
+  --chart-2: var(--brand-blue);
   --chart-3: #fbbf24;
-  --chart-4: #f87171;
+  --chart-4: var(--brand-purple);
   --chart-5: #94a3b8;
   --sidebar: #171d33;
   --sidebar-foreground: #e7e9f2;
-  --sidebar-primary: #6b84e8;
+  --sidebar-primary: var(--brand-blue);
   --sidebar-primary-foreground: #0f1424;
   --sidebar-accent: #232a47;
   --sidebar-accent-foreground: #e7e9f2;
   --sidebar-border: #2a3155;
-  --sidebar-ring: #6b84e8;
+  --sidebar-ring: var(--brand-blue);
 }
 
 @layer base {

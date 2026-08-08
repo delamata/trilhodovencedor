@@ -9,7 +9,7 @@ const CONFIG: Record<
 > = {
   PRESENTE: {
     label: 'Presente',
-    className: 'bg-[#149c88]/12 text-[#0d6b5c] dark:text-[#34d3b8] border-[#149c88]/25',
+    className: 'bg-brand-teal/12 text-[#0d6b5c] dark:text-brand-teal border-brand-teal/25',
     icon: CheckCircle2,
   },
   FALTA: {
@@ -24,7 +24,7 @@ const CONFIG: Record<
   },
   ATRASO: {
     label: 'Atraso',
-    className: 'bg-[#3b5fdd]/12 text-[#2b46a8] dark:text-[#8fa3ef] border-[#3b5fdd]/25',
+    className: 'bg-brand-blue/12 text-[#2b46a8] dark:text-brand-blue border-brand-blue/25',
     icon: Clock,
   },
   PENDENTE: {

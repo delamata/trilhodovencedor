@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LogoMark } from '@/components/shared/logo-mark';
 import { cn } from '@/lib/utils';
 import type { AppRole } from '@/lib/auth/current-user';
 import { navItemsForRole } from './nav-items';
@@ -16,9 +17,7 @@ export function Sidebar({ role }: { role: AppRole }) {
       className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-border lg:bg-sidebar lg:px-4 lg:py-6"
     >
       <div className="mb-8 flex items-center gap-2 px-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground">
-          TV
-        </div>
+        <LogoMark size={36} />
         <div>
           <p className="text-sm font-semibold leading-tight text-sidebar-foreground">
             Trilho do Vencedor

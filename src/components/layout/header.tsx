@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { LogoMark } from '@/components/shared/logo-mark';
 import { signOutAction } from '@/features/auth/actions';
 import type { CurrentUser } from '@/lib/auth/current-user';
 
@@ -33,9 +34,7 @@ export function Header({ user }: { user: CurrentUser }) {
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
       <div className="flex items-center gap-2 lg:hidden">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
-          TV
-        </div>
+        <LogoMark size={28} />
         <span className="text-sm font-semibold">Trilho do Vencedor</span>
       </div>
 
@@ -47,7 +46,10 @@ export function Header({ user }: { user: CurrentUser }) {
           aria-label={`Menu do usuário ${displayName}`}
         >
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+            <AvatarFallback
+              className="text-xs text-white"
+              style={{ backgroundImage: 'var(--brand-gradient)' }}
+            >
               {initials(user.memberName)}
             </AvatarFallback>
           </Avatar>

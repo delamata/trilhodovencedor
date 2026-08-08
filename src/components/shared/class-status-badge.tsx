@@ -19,7 +19,7 @@ const CLASS_STATUS_CONFIG: Record<
   },
   COMPLETED: {
     label: 'Finalizada',
-    className: 'bg-[#149c88]/12 text-[#0d6b5c] dark:text-[#34d3b8] border-[#149c88]/25',
+    className: 'bg-brand-teal/12 text-[#0d6b5c] dark:text-brand-teal border-brand-teal/25',
     icon: CheckCircle2,
   },
   CANCELLED: {

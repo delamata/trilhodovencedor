@@ -123,8 +123,8 @@ export function ManualCheckinForm() {
 
 function SuccessPanel({ classTitle, courseName }: { classTitle: string; courseName: string }) {
   return (
-    <div className="rounded-xl border border-[#149c88]/30 bg-[#149c88]/5 p-6 text-center">
-      <CheckCircle2 className="mx-auto h-12 w-12 text-[#149c88]" aria-hidden="true" />
+    <div className="rounded-xl border border-brand-teal/30 bg-brand-teal/5 p-6 text-center">
+      <CheckCircle2 className="mx-auto h-12 w-12 text-brand-teal" aria-hidden="true" />
       <p className="mt-3 text-lg font-semibold text-foreground">Presença registrada com sucesso!</p>
       <p className="mt-1 text-sm text-muted-foreground">
         {courseName} — {classTitle}

@@ -1,9 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+// Teal e azul da própria logo da Videira (ver globals.css --brand-teal/--brand-blue).
 const COURSE_STYLE: Record<string, string> = {
-  MATURIDADE: 'bg-[#149c88]/12 text-[#0d6b5c] dark:text-[#34d3b8] border-[#149c88]/25',
-  CTL: 'bg-[#3b5fdd]/12 text-[#2b46a8] dark:text-[#8fa3ef] border-[#3b5fdd]/25',
+  MATURIDADE: 'bg-brand-teal/12 text-[#0d6b5c] dark:text-brand-teal border-brand-teal/25',
+  CTL: 'bg-brand-blue/12 text-[#2b46a8] dark:text-brand-blue border-brand-blue/25',
 };
 
 export function CourseBadge({ code, name }: { code: string; name?: string }) {
