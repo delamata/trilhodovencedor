@@ -24,6 +24,10 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'Trilho do Vencedor',
   },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export const viewport: Viewport = {
