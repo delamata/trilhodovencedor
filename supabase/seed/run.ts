@@ -24,8 +24,16 @@
  * chamar as funções trilho_* (elas checam trilho_is_admin() via
  * auth.uid(), que é null numa sessão de service role).
  */
+import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../src/types/database';
+
+// tsx (ao contrário do Next.js) não carrega .env.local sozinho — sem
+// isto, requireEnv() abaixo sempre falha mesmo com o arquivo
+// preenchido (mesmo gotcha documentado em vitest.integration.config.ts).
+if (existsSync('.env.local')) {
+  process.loadEnvFile('.env.local');
+}
 
 const DEV_PASSWORD = 'trilho-dev-2026';
 
