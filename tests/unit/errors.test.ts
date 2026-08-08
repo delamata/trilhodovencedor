@@ -4,7 +4,7 @@ import { friendlyRpcError } from '@/lib/errors';
 describe('friendlyRpcError', () => {
   it('traduz um código conhecido para mensagem amigável em PT-BR', () => {
     expect(friendlyRpcError('ALUNO_JA_POSSUI_MATRICULA_ATIVA')).toMatch(/matrícula ativa/);
-    expect(friendlyRpcError('CTL_SOMENTE_EM_TERCA')).toMatch(/terça-feira/);
+    expect(friendlyRpcError('TURMA_MATURIDADE_RELACIONADA_NAO_ENCONTRADA')).toMatch(/turma de origem/);
   });
 
   it('lida com mensagens do Postgres que têm contexto extra em outras linhas', () => {

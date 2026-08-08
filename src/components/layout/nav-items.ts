@@ -1,14 +1,12 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  CalendarDays,
-  ClipboardCheck,
   GraduationCap,
   LayoutDashboard,
+  Layers,
   Settings,
   User,
   Users,
   FileBarChart,
-  BookOpen,
 } from 'lucide-react';
 import type { AppRole } from '@/lib/auth/current-user';
 
@@ -30,17 +28,10 @@ export const NAV_ITEMS: NavItem[] = [
     mobile: true,
   },
   {
-    href: '/presenca',
-    label: 'Presença',
-    icon: ClipboardCheck,
-    roles: ['ALUNO'],
-    mobile: true,
-  },
-  {
-    href: '/aulas',
-    label: 'Aulas',
-    icon: BookOpen,
-    roles: ['ADMIN', 'PROFESSOR', 'ALUNO'],
+    href: '/turmas',
+    label: 'Turmas',
+    icon: Layers,
+    roles: ['ADMIN', 'PROFESSOR'],
     mobile: true,
   },
   {
@@ -54,12 +45,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Cursos',
     icon: GraduationCap,
     roles: ['ADMIN'],
-  },
-  {
-    href: '/calendario',
-    label: 'Calendário',
-    icon: CalendarDays,
-    roles: ['ADMIN', 'PROFESSOR'],
   },
   {
     href: '/relatorios',

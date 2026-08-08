@@ -27,9 +27,8 @@ import { getCelulaOptionsAction } from './actions';
 import { importStudentsAction, type ImportStudentRow } from './import-actions';
 
 const CSV_PLACEHOLDER =
-  'nome,email,telefone,curso\nJoão da Silva,joao@example.com,11999990000,MATURIDADE\nMaria Souza,maria@example.com,11988880000,CTL';
+  'nome,email,telefone\nJoão da Silva,joao@example.com,11999990000\nMaria Souza,maria@example.com,11988880000';
 
-const VALID_COURSES = new Set(['MATURIDADE', 'CTL']);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface ParsedRow extends ImportStudentRow {
@@ -47,25 +46,29 @@ function parseCsv(text: string): ParsedRow[] {
 
   return dataLines.map((line, index) => {
     const cols = line.split(',').map((c) => c.trim());
-    const [nome, email, tel, curso] = cols;
+    const [nome, email, tel] = cols;
 
     let error: string | undefined;
     if (!nome) error = 'nome vazio';
     else if (!email || !EMAIL_REGEX.test(email)) error = 'e-mail inválido';
-    else if (!curso || !VALID_COURSES.has(curso.toUpperCase())) error = 'curso inexistente';
 
     return {
       line: index + 1,
       nome: nome ?? '',
       email: email ?? '',
       tel: tel ?? '',
-      cursoCode: (curso ?? '').toUpperCase(),
       error,
     };
   });
 }
 
-export function ImportStudentsDialog() {
+export function ImportStudentsDialog({
+  cohortId,
+  cohortLabel,
+}: {
+  cohortId: string;
+  cohortLabel: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
@@ -93,6 +96,7 @@ export function ImportStudentsDialog() {
       const result = await importStudentsAction(
         validRows.map(({ line: _line, error: _error, ...row }) => row),
         celula,
+        cohortId,
       );
       if (result.errors.length === 0) {
         toast.success(`${result.imported} de ${result.total} alunos importados com sucesso.`);
@@ -119,9 +123,10 @@ export function ImportStudentsDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Importação em lote de alunos</DialogTitle>
+          <DialogTitle>Importação em lote de alunos — {cohortLabel}</DialogTitle>
           <DialogDescription>
-            Cole uma linha por aluno: nome,email,telefone,curso (curso deve ser MATURIDADE ou CTL).
+            Cole uma linha por aluno: nome,email,telefone. Todos serão matriculados na turma{' '}
+            {cohortLabel}.
           </DialogDescription>
         </DialogHeader>
 

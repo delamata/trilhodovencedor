@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
 import { getSupabaseAnonKey, getSupabaseUrl } from './env';
 
-const PUBLIC_PATHS = ['/login', '/esqueci-senha', '/redefinir-senha'];
+const PUBLIC_PATHS = ['/login', '/esqueci-senha', '/redefinir-senha', '/presenca'];
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -50,9 +50,6 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 
   if (!user && !isPublicPath(pathname)) {
     const loginUrl = new URL('/login', request.url);
-    // Preserva a query string (ex.: /presenca?token=...) para o aluno
-    // voltar direto pra tela de check-in depois de logar, em vez de
-    // cair no dashboard e perder o link da chamada.
     loginUrl.searchParams.set('redirect', `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }

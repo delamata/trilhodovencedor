@@ -20,7 +20,7 @@ describe('mergeRosterWithAttendance', () => {
           id: 'att1',
           studentId: 's1',
           status: 'PRESENTE',
-          source: 'STUDENT_CHECKIN',
+          source: 'PUBLIC_CHECKIN',
           checkedInAt: '2026-08-11T23:00:00Z',
         },
       ],
@@ -29,7 +29,7 @@ describe('mergeRosterWithAttendance', () => {
     expect(result[0]).toMatchObject({
       studentId: 's1',
       status: 'PRESENTE',
-      source: 'STUDENT_CHECKIN',
+      source: 'PUBLIC_CHECKIN',
       attendanceId: 'att1',
     });
   });
@@ -48,10 +48,6 @@ describe('mergeRosterWithAttendance', () => {
   });
 
   it('ignora registro de presença de aluno que não está mais na lista de matriculados ativos', () => {
-    // Ex.: aluno teve a matrícula encerrada depois de já ter registrado
-    // presença numa aula anterior — o histórico de presença continua
-    // existindo no banco, mas ele não deve mais aparecer no roster
-    // "ativo" da aula.
     const result = mergeRosterWithAttendance(
       [{ studentId: 's1', nome: 'Ana' }],
       [
@@ -59,7 +55,7 @@ describe('mergeRosterWithAttendance', () => {
           id: 'att-old',
           studentId: 's2',
           status: 'PRESENTE',
-          source: 'STUDENT_CHECKIN',
+          source: 'PUBLIC_CHECKIN',
           checkedInAt: '2026-08-11T23:00:00Z',
         },
       ],

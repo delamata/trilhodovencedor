@@ -118,13 +118,13 @@ export default async function AlunoDetailPage({
               </TableHeader>
               <TableBody>
                 {history.map((row) => (
-                  <TableRow key={row.classId}>
+                  <TableRow key={row.classSessionId}>
                     <TableCell>{formatDate(row.classDate)}</TableCell>
                     <TableCell>
                       <CourseBadge code={row.courseCode} />
                     </TableCell>
                     <TableCell>
-                      Aula {row.classNumber} — {row.title}
+                      {row.lessonCode} — {row.lessonTitle}
                     </TableCell>
                     <TableCell>
                       <AttendanceStatusBadge status={row.status} />

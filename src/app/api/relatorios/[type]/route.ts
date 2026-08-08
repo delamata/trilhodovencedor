@@ -5,8 +5,10 @@ import { buildXlsx } from '@/lib/export/xlsx';
 import {
   alunoReportColumns,
   attendanceRecordColumns,
+  desistenciaReportColumns,
   getAlunosEmRiscoReportRows,
   getAlunosReportRows,
+  getDesistenciasReportRows,
   getFaltasReportRows,
   getHistoricoCompletoReportRows,
   getPresencaPorAlunoReportRows,
@@ -55,6 +57,7 @@ const REPORTS = {
     attendanceRecordColumns,
     getHistoricoCompletoReportRows,
   ),
+  desistencias: defineReport('desistencias', desistenciaReportColumns, getDesistenciasReportRows),
 } satisfies Record<string, ReportDefinition>;
 
 type ReportKey = keyof typeof REPORTS;

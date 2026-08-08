@@ -6,8 +6,12 @@ import { expect, test } from '@playwright/test';
  * configurado) — cobrem o que dá pra verificar com qualquer projeto
  * Supabase (mesmo com credenciais placeholder, como no CI):
  *   - a tela de login carrega e valida os campos;
- *   - rotas protegidas nunca renderizam para quem não está logado,
- *     mesmo direto pela URL — sempre caem no /login (seção 33).
+ *   - rotas protegidas (o painel admin/professor/aluno) nunca renderizam
+ *     para quem não está logado, mesmo direto pela URL — sempre caem no
+ *     /login (BR-014);
+ *   - `/presenca/[turma]` é a única exceção de propósito — nunca deve
+ *     cair no /login, mesmo sem sessão (BR-013), porque o check-in do
+ *     aluno não depende mais de autenticação.
  */
 
 test.describe('Login', () => {
@@ -35,7 +39,18 @@ test.describe('Login', () => {
 });
 
 test.describe('Proteção de rotas', () => {
-  const protectedPaths = ['/dashboard', '/alunos', '/cursos', '/calendario', '/aulas', '/presenca', '/relatorios', '/configuracoes', '/perfil'];
+  const protectedPaths = [
+    '/dashboard',
+    '/alunos',
+    '/cursos',
+    '/turmas',
+    '/turmas/nova',
+    '/turmas/fila',
+    '/aulas/00000000-0000-0000-0000-000000000000',
+    '/relatorios',
+    '/configuracoes',
+    '/perfil',
+  ];
 
   for (const path of protectedPaths) {
     test(`${path} redireciona para /login quando não autenticado`, async ({ page }) => {
@@ -45,9 +60,15 @@ test.describe('Proteção de rotas', () => {
   }
 
   test('preserva o destino original no redirect (para voltar depois do login)', async ({ page }) => {
-    await page.goto('/presenca?token=abc123');
+    await page.goto('/turmas?foo=bar');
     await expect(page).toHaveURL(/\/login\?redirect=/);
     const url = new URL(page.url());
-    expect(url.searchParams.get('redirect')).toBe('/presenca?token=abc123');
+    expect(url.searchParams.get('redirect')).toBe('/turmas?foo=bar');
+  });
+
+  test('/presenca/[turma] NUNCA exige login — check-in público não usa sessão', async ({ page }) => {
+    await page.goto('/presenca/qualquer-codigo-de-turma?t=qualquer-token');
+    await expect(page).not.toHaveURL(/\/login/);
+    await expect(page.getByRole('heading', { name: 'Trilho do Vencedor' })).toHaveCount(0);
   });
 });

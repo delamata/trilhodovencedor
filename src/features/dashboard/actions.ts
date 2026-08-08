@@ -10,15 +10,15 @@ import {
   type PresenceByClassPoint,
 } from '@/lib/domain/dashboard-metrics';
 import { todayInAppTimezone } from '@/lib/format';
-import type { AttendanceStatus, ClassStatus } from '@/types/database';
+import type { AttendanceStatus, ClassSessionStatus } from '@/types/database';
 
 export interface NextClassInfo {
   id: string;
-  title: string;
-  classNumber: number;
+  lessonCode: string;
+  lessonTitle: string;
   classDate: string;
   startTime: string;
-  status: ClassStatus;
+  status: ClassSessionStatus;
 }
 
 export interface StudentDashboardData {
@@ -33,11 +33,10 @@ export interface StudentDashboardData {
   absencesRemaining: number;
   situacao: Situacao;
   nextClass: NextClassInfo | null;
-  canCheckInNow: boolean;
   recentHistory: {
-    classId: string;
-    title: string;
-    classNumber: number;
+    classSessionId: string;
+    lessonCode: string;
+    lessonTitle: string;
     classDate: string;
     status: AttendanceStatus;
   }[];
@@ -49,6 +48,7 @@ export async function getStudentDashboardDataAction(): Promise<StudentDashboardD
 
   const supabase = await createClient();
   const today = todayInAppTimezone();
+  const cohortId = user.activeEnrollment.cohortId;
 
   const [{ data: summary }, { data: nextClass }, { data: historyRows }] = await Promise.all([
     supabase
@@ -57,9 +57,9 @@ export async function getStudentDashboardDataAction(): Promise<StudentDashboardD
       .eq('enrollment_id', user.activeEnrollment.enrollmentId)
       .maybeSingle(),
     supabase
-      .from('classes')
-      .select('id, title, class_number, class_date, start_time, status')
-      .eq('course_id', user.activeEnrollment.courseId)
+      .from('class_sessions')
+      .select('id, class_date, start_time, status, lesson_templates(lesson_code, title)')
+      .eq('cohort_id', cohortId)
       .neq('status', 'CANCELLED')
       .gte('class_date', today)
       .order('class_date', { ascending: true })
@@ -68,32 +68,37 @@ export async function getStudentDashboardDataAction(): Promise<StudentDashboardD
       .maybeSingle(),
     supabase
       .from('attendance')
-      .select('status, classes(id, title, class_number, class_date)')
+      .select(
+        'status, class_sessions(id, class_date, lesson_templates(lesson_code, title))',
+      )
       .eq('student_id', user.memberId)
       .order('created_at', { ascending: false })
       .limit(5),
   ]);
 
-  const { data: openToday } = await supabase
-    .from('classes')
-    .select('id')
-    .eq('course_id', user.activeEnrollment.courseId)
-    .eq('status', 'ATTENDANCE_OPEN')
-    .limit(1)
-    .maybeSingle();
-
   const recentHistory = (historyRows ?? [])
     .map((row) => {
-      const classRow = Array.isArray(row.classes) ? row.classes[0] : row.classes;
+      const session = Array.isArray(row.class_sessions) ? row.class_sessions[0] : row.class_sessions;
+      const lesson = session
+        ? Array.isArray(session.lesson_templates)
+          ? session.lesson_templates[0]
+          : session.lesson_templates
+        : null;
       return {
-        classId: classRow?.id ?? '',
-        title: classRow?.title ?? '—',
-        classNumber: classRow?.class_number ?? 0,
-        classDate: classRow?.class_date ?? '',
+        classSessionId: session?.id ?? '',
+        lessonCode: lesson?.lesson_code ?? '—',
+        lessonTitle: lesson?.title ?? '—',
+        classDate: session?.class_date ?? '',
         status: row.status,
       };
     })
-    .filter((row) => row.classId);
+    .filter((row) => row.classSessionId);
+
+  const nextLesson = nextClass
+    ? Array.isArray(nextClass.lesson_templates)
+      ? nextClass.lesson_templates[0]
+      : nextClass.lesson_templates
+    : null;
 
   return {
     nome: user.memberName ?? '',
@@ -106,17 +111,17 @@ export async function getStudentDashboardDataAction(): Promise<StudentDashboardD
     maxAbsences: summary?.max_absences ?? 0,
     absencesRemaining: summary?.absences_remaining ?? 0,
     situacao: getSituacao(summary?.absences_remaining ?? 0),
-    nextClass: nextClass
-      ? {
-          id: nextClass.id,
-          title: nextClass.title,
-          classNumber: nextClass.class_number,
-          classDate: nextClass.class_date,
-          startTime: nextClass.start_time,
-          status: nextClass.status,
-        }
-      : null,
-    canCheckInNow: Boolean(openToday),
+    nextClass:
+      nextClass && nextLesson
+        ? {
+            id: nextClass.id,
+            lessonCode: nextLesson.lesson_code,
+            lessonTitle: nextLesson.title,
+            classDate: nextClass.class_date,
+            startTime: nextClass.start_time,
+            status: nextClass.status,
+          }
+        : null,
     recentHistory,
   };
 }
@@ -130,11 +135,11 @@ export async function getAdminDashboardDataAction(): Promise<AdminDashboardData>
   await requireUser();
   const supabase = await createClient();
 
-  const [{ data: summaries }, { data: completedClasses }] = await Promise.all([
+  const [{ data: summaries }, { data: completedSessions }] = await Promise.all([
     supabase.from('trilho_student_summary').select('*').eq('enrollment_status', 'ACTIVE'),
     supabase
-      .from('classes')
-      .select('id, class_number, class_date, courses(code)')
+      .from('class_sessions')
+      .select('id, class_date, lesson_templates(lesson_code), cohorts(courses(code))')
       .eq('status', 'COMPLETED')
       .order('class_date', { ascending: true }),
   ]);
@@ -149,23 +154,32 @@ export async function getAdminDashboardDataAction(): Promise<AdminDashboardData>
     })),
   );
 
-  const recentClasses = (completedClasses ?? []).slice(-12);
-  const classIds = recentClasses.map((c) => c.id);
+  const recentSessions = (completedSessions ?? []).slice(-12);
+  const sessionIds = recentSessions.map((s) => s.id);
 
-  const { data: attendanceRows } = classIds.length
-    ? await supabase.from('attendance').select('class_id, status').in('class_id', classIds)
+  const { data: attendanceRows } = sessionIds.length
+    ? await supabase.from('attendance').select('class_session_id, status').in('class_session_id', sessionIds)
     : { data: [] };
 
   const presenceByClass = computePresenceByClass(
-    recentClasses.map((c) => {
-      const course = Array.isArray(c.courses) ? c.courses[0] : c.courses;
+    recentSessions.map((s) => {
+      const cohort = Array.isArray(s.cohorts) ? s.cohorts[0] : s.cohorts;
+      const course = cohort?.courses
+        ? Array.isArray(cohort.courses)
+          ? cohort.courses[0]
+          : cohort.courses
+        : null;
+      const lesson = Array.isArray(s.lesson_templates) ? s.lesson_templates[0] : s.lesson_templates;
       return {
-        classId: c.id,
-        label: `${course?.code ?? ''} · Aula ${c.class_number}`,
-        classDate: c.class_date,
+        classSessionId: s.id,
+        label: `${course?.code ?? ''} · ${lesson?.lesson_code ?? ''}`,
+        classDate: s.class_date,
       };
     }),
-    (attendanceRows ?? []).map((row) => ({ classId: row.class_id, status: row.status })),
+    (attendanceRows ?? []).map((row) => ({
+      classSessionId: row.class_session_id,
+      status: row.status,
+    })),
   );
 
   return { metrics, presenceByClass };

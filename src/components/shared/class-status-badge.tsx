@@ -1,10 +1,10 @@
 import { CalendarClock, CheckCircle2, CircleSlash, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { ClassStatus } from '@/types/database';
+import type { ClassSessionStatus } from '@/types/database';
 
 const CLASS_STATUS_CONFIG: Record<
-  ClassStatus,
+  ClassSessionStatus,
   { label: string; className: string; icon: typeof CalendarClock }
 > = {
   SCHEDULED: {
@@ -29,7 +29,7 @@ const CLASS_STATUS_CONFIG: Record<
   },
 };
 
-export function ClassStatusBadge({ status }: { status: ClassStatus }) {
+export function ClassStatusBadge({ status }: { status: ClassSessionStatus }) {
   const config = CLASS_STATUS_CONFIG[status];
   const Icon = config.icon;
   return (

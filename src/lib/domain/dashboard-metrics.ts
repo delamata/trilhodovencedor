@@ -66,19 +66,19 @@ export function computeAdminDashboardMetrics(summaries: StudentSummaryLike[]): A
   };
 }
 
-export interface ClassAttendanceInput {
-  classId: string;
+export interface ClassSessionAttendanceInput {
+  classSessionId: string;
   label: string;
   classDate: string;
 }
 
 export interface AttendanceRowInput {
-  classId: string;
+  classSessionId: string;
   status: 'PRESENTE' | 'FALTA' | 'FALTA_JUSTIFICADA' | 'ATRASO';
 }
 
 export interface PresenceByClassPoint {
-  classId: string;
+  classSessionId: string;
   label: string;
   classDate: string;
   present: number;
@@ -88,23 +88,23 @@ export interface PresenceByClassPoint {
 
 /** Presença por aula (para o gráfico de barras): quantos registros PRESENTE por aula, sobre o total de registros lançados. */
 export function computePresenceByClass(
-  classes: ClassAttendanceInput[],
+  sessions: ClassSessionAttendanceInput[],
   attendanceRows: AttendanceRowInput[],
 ): PresenceByClassPoint[] {
-  const byClass = new Map<string, { present: number; total: number }>();
+  const bySession = new Map<string, { present: number; total: number }>();
   for (const row of attendanceRows) {
-    const entry = byClass.get(row.classId) ?? { present: 0, total: 0 };
+    const entry = bySession.get(row.classSessionId) ?? { present: 0, total: 0 };
     entry.total += 1;
     if (row.status === 'PRESENTE') entry.present += 1;
-    byClass.set(row.classId, entry);
+    bySession.set(row.classSessionId, entry);
   }
 
-  return classes.map((c) => {
-    const entry = byClass.get(c.classId) ?? { present: 0, total: 0 };
+  return sessions.map((s) => {
+    const entry = bySession.get(s.classSessionId) ?? { present: 0, total: 0 };
     return {
-      classId: c.classId,
-      label: c.label,
-      classDate: c.classDate,
+      classSessionId: s.classSessionId,
+      label: s.label,
+      classDate: s.classDate,
       present: entry.present,
       total: entry.total,
       pct: entry.total > 0 ? Math.round((entry.present / entry.total) * 100) : 0,

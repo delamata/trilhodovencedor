@@ -20,6 +20,7 @@ export function StudentTable({ students }: { students: StudentListRow[] }) {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Curso</TableHead>
+            <TableHead>Turma</TableHead>
             <TableHead className="text-right">Presenças</TableHead>
             <TableHead className="text-right">Faltas</TableHead>
             <TableHead className="text-right">Limite</TableHead>
@@ -36,6 +37,7 @@ export function StudentTable({ students }: { students: StudentListRow[] }) {
               <TableCell>
                 <CourseBadge code={student.courseCode} name={student.courseName} />
               </TableCell>
+              <TableCell className="text-sm text-muted-foreground">{student.cohortName}</TableCell>
               <TableCell className="text-right tabular-nums">{student.presences}</TableCell>
               <TableCell className="text-right tabular-nums">{student.countedAbsences}</TableCell>
               <TableCell className="text-right tabular-nums">{student.maxAbsences}</TableCell>

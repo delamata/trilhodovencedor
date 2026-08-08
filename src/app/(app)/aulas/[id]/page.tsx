@@ -1,18 +1,18 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { PageHeader } from '@/components/shared/page-header';
 import { ClassStatusBadge } from '@/components/shared/class-status-badge';
-import { CourseBadge } from '@/components/shared/course-badge';
-import { formatDate, formatTimeColumn } from '@/lib/format';
-import { weekdayLabel } from '@/lib/domain/calendar';
 import { getCurrentUser } from '@/lib/auth/current-user';
-import { getClassDetailAction, getClassRosterAction } from '@/features/attendance/actions';
-import { AttendancePanel } from '@/features/attendance/attendance-panel';
-import { StudentClassView } from '@/features/attendance/student-class-view';
+import { formatDate, formatTimeColumn } from '@/lib/format';
+import { formatWeekday } from '@/lib/domain/weekday';
+import { getClassSessionDetailAction } from '@/features/class-sessions/actions';
+import { ClassSessionActionsBar } from '@/features/class-sessions/class-session-actions-bar';
+import { AttendanceRosterTable } from '@/features/class-sessions/attendance-roster-table';
 
 export const metadata: Metadata = { title: 'Aula — Trilho do Vencedor' };
 
-export default async function AulaDetailPage({
+export default async function ClassSessionDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -21,70 +21,41 @@ export default async function AulaDetailPage({
 
   const user = await getCurrentUser();
   if (!user) redirect('/login');
+  if (!user.isAdmin && !user.teacherCohortIds.length) redirect('/dashboard');
 
-  const classDetail = await getClassDetailAction(id);
-  if (!classDetail) notFound();
+  const session = await getClassSessionDetailAction(id);
+  if (!session) notFound();
 
-  const canManage = user.isAdmin || user.teacherCourseIds.includes(classDetail.courseId);
-  const isEnrolledStudent = classDetail.courseId === user.activeEnrollment?.courseId;
-
-  if (!canManage && !isEnrolledStudent) {
-    redirect('/aulas');
-  }
+  const canManage = user.isAdmin || user.teacherCohortIds.includes(session.cohortId);
+  if (!canManage) redirect('/dashboard');
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title={`Aula ${classDetail.classNumber} — ${classDetail.title}`}
-        description={`${formatDate(classDetail.classDate)} (${weekdayLabel(classDetail.classDate)}) · ${formatTimeColumn(classDetail.startTime)}–${formatTimeColumn(classDetail.endTime)}`}
-        actions={
-          <div className="flex items-center gap-2">
-            <CourseBadge code={classDetail.courseCode} name={classDetail.courseName} />
-            <ClassStatusBadge status={classDetail.status} />
-          </div>
+        title={`${session.lessonCode} — ${session.lessonTitle}`}
+        description={
+          <>
+            <Link href={`/turmas/${session.cohortId}`} className="hover:underline">
+              {session.courseCode} · {session.cohortName}
+            </Link>
+            {' · '}
+            {formatDate(session.classDate)} ({formatWeekday(session.classDate)}) ·{' '}
+            {formatTimeColumn(session.startTime)}–{formatTimeColumn(session.endTime)}
+          </>
         }
+        actions={<ClassStatusBadge status={session.status} />}
       />
 
-      {classDetail.notes ? (
-        <p className="mb-6 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          {classDetail.notes}
-        </p>
-      ) : null}
+      <ClassSessionActionsBar classSessionId={session.id} status={session.status} />
 
-      {classDetail.status === 'CANCELLED' ? (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-sm text-destructive">
-          Esta aula foi cancelada e não gera falta para os alunos.
-        </div>
-      ) : canManage ? (
-        <AttendancePanelData classId={classDetail.id} classDetail={classDetail} />
-      ) : (
-        <StudentClassViewData classDetail={classDetail} studentId={user.memberId} />
-      )}
+      <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 text-base font-semibold text-foreground">Presença</h2>
+        <AttendanceRosterTable
+          classSessionId={session.id}
+          roster={session.roster}
+          editable={session.status !== 'CANCELLED'}
+        />
+      </section>
     </div>
   );
-}
-
-async function AttendancePanelData({
-  classId,
-  classDetail,
-}: {
-  classId: string;
-  classDetail: NonNullable<Awaited<ReturnType<typeof getClassDetailAction>>>;
-}) {
-  const roster = await getClassRosterAction(classId);
-  return (
-    <AttendancePanel classDetail={classDetail} initialRoster={roster} initialStatus={classDetail.status} />
-  );
-}
-
-async function StudentClassViewData({
-  classDetail,
-  studentId,
-}: {
-  classDetail: NonNullable<Awaited<ReturnType<typeof getClassDetailAction>>>;
-  studentId: string | null;
-}) {
-  const roster = await getClassRosterAction(classDetail.id);
-  const mine = roster.find((row) => row.studentId === studentId);
-  return <StudentClassView classDetail={classDetail} myStatus={mine?.status ?? null} />;
 }

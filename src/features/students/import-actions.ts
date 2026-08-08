@@ -10,7 +10,6 @@ export interface ImportStudentRow {
   nome: string;
   email: string;
   tel: string;
-  cursoCode: string;
 }
 
 export interface ImportResult {
@@ -20,29 +19,25 @@ export interface ImportResult {
 }
 
 /**
- * Importação em lote de alunos (seção 18). Formato: nome,email,telefone,curso.
- * A tabela members do Oikos exige uma célula (not null); como o CSV da
- * spec não inclui esse campo, o admin escolhe uma célula única para
- * aplicar a todo o lote no diálogo de importação.
+ * Importação em lote de alunos direto numa turma (cohort) específica.
+ * Formato: nome,email,telefone. A tabela members do Oikos exige uma
+ * célula (not null); como o CSV não inclui esse campo, o admin escolhe
+ * uma célula única para aplicar a todo o lote no diálogo de importação.
  *
- * Cada linha, na ordem: cria o membro, convida o login por e-mail
- * (reaproveita login existente se o e-mail já tiver profile vinculado
- * a um member_id — não deveria ocorrer aqui já que sempre cria membro
- * novo, mas trilho_enroll_student ainda garante a regra de matrícula
- * única) e matricula no curso. Uma linha com erro não interrompe as
- * demais — o resultado reporta linha a linha, só depois de confirmado
- * pelo ADMIN (a validação/preview acontece antes, no cliente).
+ * Cada linha, na ordem: cria o membro, convida o login por e-mail e
+ * matricula na turma via trilho_enroll_student. Uma linha com erro não
+ * interrompe as demais — o resultado reporta linha a linha, só depois
+ * de confirmado pelo ADMIN (a validação/preview acontece antes, no
+ * cliente).
  */
 export async function importStudentsAction(
   rows: ImportStudentRow[],
   celula: string,
+  cohortId: string,
 ): Promise<ImportResult> {
   await requireAdmin();
   const supabase = await createClient();
   const admin = createAdminClient();
-
-  const { data: courses } = await supabase.from('courses').select('id, code');
-  const courseIdByCode = new Map((courses ?? []).map((c) => [c.code, c.id]));
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   const errors: ImportResult['errors'] = [];
@@ -51,12 +46,6 @@ export async function importStudentsAction(
   for (let i = 0; i < rows.length; i += 1) {
     const row = rows[i];
     if (!row) continue;
-
-    const courseId = courseIdByCode.get(row.cursoCode);
-    if (!courseId) {
-      errors.push({ row: i + 1, nome: row.nome, message: `Curso "${row.cursoCode}" não encontrado.` });
-      continue;
-    }
 
     const { data: member, error: memberError } = await supabase
       .from('members')
@@ -96,7 +85,7 @@ export async function importStudentsAction(
 
     const { error: enrollError } = await supabase.rpc('trilho_enroll_student', {
       p_student_id: member.id,
-      p_course_id: courseId,
+      p_cohort_id: cohortId,
     });
 
     if (enrollError) {
@@ -108,7 +97,8 @@ export async function importStudentsAction(
   }
 
   revalidatePath('/alunos');
-  revalidatePath('/cursos');
+  revalidatePath('/turmas');
+  revalidatePath(`/turmas/${cohortId}`);
 
   return { total: rows.length, imported, errors };
 }

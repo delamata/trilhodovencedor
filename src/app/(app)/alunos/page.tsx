@@ -9,7 +9,6 @@ import type { Situacao } from '@/lib/domain/situacao';
 import { listStudentsWithSummaryAction } from '@/features/students/queries';
 import { StudentFilters } from '@/features/students/student-filters';
 import { StudentTable } from '@/features/students/student-table';
-import { ImportStudentsDialog } from '@/features/students/import-students-dialog';
 
 export const metadata: Metadata = { title: 'Alunos — Trilho do Vencedor' };
 
@@ -72,7 +71,6 @@ export default async function AlunosPage({
       <PageHeader
         title="Alunos"
         description={`${allStudents.length} aluno${allStudents.length === 1 ? '' : 's'} com matrícula ativa`}
-        actions={<ImportStudentsDialog />}
       />
 
       <div className="mb-6">

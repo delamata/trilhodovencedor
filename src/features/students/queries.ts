@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { getSituacao, type Situacao } from '@/lib/domain/situacao';
-import type { AttendanceStatus } from '@/types/database';
+import type { AcademicResult, AttendanceStatus, EnrollmentStatus } from '@/types/database';
 
 export interface StudentListRow {
   studentId: string;
@@ -13,6 +13,9 @@ export interface StudentListRow {
   courseId: string;
   courseCode: string;
   courseName: string;
+  cohortId: string;
+  cohortCode: string;
+  cohortName: string;
   maxAbsences: number;
   classesRecorded: number;
   presences: number;
@@ -26,6 +29,7 @@ export interface StudentListRow {
 
 export interface StudentListFilters {
   curso?: string;
+  cohortId?: string;
   situacao?: Situacao;
   status?: 'ativo' | 'inativo';
   nome?: string;
@@ -68,6 +72,9 @@ export async function listStudentsWithSummaryAction(
       courseId: s.course_id,
       courseCode: s.course_code,
       courseName: s.course_name,
+      cohortId: s.cohort_id,
+      cohortCode: s.cohort_code,
+      cohortName: s.cohort_name,
       maxAbsences: s.max_absences,
       classesRecorded: s.classes_recorded,
       presences: s.presences,
@@ -81,6 +88,7 @@ export async function listStudentsWithSummaryAction(
   });
 
   if (filters.curso) rows = rows.filter((r) => r.courseCode === filters.curso);
+  if (filters.cohortId) rows = rows.filter((r) => r.cohortId === filters.cohortId);
   if (filters.situacao) rows = rows.filter((r) => r.situacao === filters.situacao);
   if (filters.status) {
     rows = rows.filter((r) => (filters.status === 'ativo' ? r.memberActive : !r.memberActive));
@@ -117,10 +125,15 @@ export interface StudentEnrollmentSummary {
   courseId: string;
   courseCode: string;
   courseName: string;
+  cohortId: string;
+  cohortCode: string;
+  cohortName: string;
   maxAbsences: number;
-  enrollmentStatus: string;
+  enrollmentStatus: EnrollmentStatus;
+  academicResult: AcademicResult;
   enrolledAt: string;
-  endedAt: string | null;
+  completedAt: string | null;
+  droppedOutAt: string | null;
   classesRecorded: number;
   presences: number;
   absences: number;
@@ -146,10 +159,15 @@ export async function getStudentEnrollmentsAction(
     courseId: s.course_id,
     courseCode: s.course_code,
     courseName: s.course_name,
+    cohortId: s.cohort_id,
+    cohortCode: s.cohort_code,
+    cohortName: s.cohort_name,
     maxAbsences: s.max_absences,
     enrollmentStatus: s.enrollment_status,
+    academicResult: s.academic_result,
     enrolledAt: s.enrolled_at,
-    endedAt: s.ended_at,
+    completedAt: s.completed_at,
+    droppedOutAt: s.dropped_out_at,
     classesRecorded: s.classes_recorded,
     presences: s.presences,
     absences: s.absences,
@@ -161,10 +179,10 @@ export async function getStudentEnrollmentsAction(
 }
 
 export interface StudentHistoryRow {
-  classId: string;
+  classSessionId: string;
   courseCode: string;
-  classNumber: number;
-  title: string;
+  lessonCode: string;
+  lessonTitle: string;
   classDate: string;
   status: AttendanceStatus;
 }
@@ -176,19 +194,35 @@ export async function getStudentAttendanceHistoryAction(
   const supabase = await createClient();
   const { data } = await supabase
     .from('attendance')
-    .select('status, classes(id, class_number, title, class_date, courses(code))')
+    .select(
+      'status, class_sessions(id, class_date, lesson_templates(lesson_code, title), cohorts(courses(code)))',
+    )
     .eq('student_id', studentId);
 
   return (data ?? [])
     .map((row) => {
-      const classRow = Array.isArray(row.classes) ? row.classes[0] : row.classes;
-      const course = classRow ? (Array.isArray(classRow.courses) ? classRow.courses[0] : classRow.courses) : null;
+      const session = Array.isArray(row.class_sessions) ? row.class_sessions[0] : row.class_sessions;
+      const lesson = session
+        ? Array.isArray(session.lesson_templates)
+          ? session.lesson_templates[0]
+          : session.lesson_templates
+        : null;
+      const cohort = session
+        ? Array.isArray(session.cohorts)
+          ? session.cohorts[0]
+          : session.cohorts
+        : null;
+      const course = cohort?.courses
+        ? Array.isArray(cohort.courses)
+          ? cohort.courses[0]
+          : cohort.courses
+        : null;
       return {
-        classId: classRow?.id ?? '',
+        classSessionId: session?.id ?? '',
         courseCode: course?.code ?? '—',
-        classNumber: classRow?.class_number ?? 0,
-        title: classRow?.title ?? '—',
-        classDate: classRow?.class_date ?? '',
+        lessonCode: lesson?.lesson_code ?? '—',
+        lessonTitle: lesson?.title ?? '—',
+        classDate: session?.class_date ?? '',
         status: row.status,
       };
     })

@@ -5,6 +5,7 @@ export type AppRole = 'ADMIN' | 'PROFESSOR' | 'ALUNO' | 'SEM_ACESSO';
 
 export interface ActiveEnrollmentSummary {
   enrollmentId: string;
+  cohortId: string;
   courseId: string;
   courseCode: string;
   courseName: string;
@@ -16,15 +17,15 @@ export interface CurrentUser {
   memberId: string | null;
   memberName: string | null;
   isAdmin: boolean;
-  teacherCourseIds: string[];
+  teacherCohortIds: string[];
   activeEnrollment: ActiveEnrollmentSummary | null;
   /**
    * Papel efetivo no Trilho do Vencedor. Derivado, nunca armazenado:
    * ADMIN vem de profiles.is_admin; PROFESSOR de estar em
-   * teacher_courses; ALUNO de ter matrícula ACTIVE em enrollments.
+   * teacher_cohorts; ALUNO de ter matrícula ACTIVE em enrollments.
    * Um mesmo usuário pode ser ADMIN e também professor/aluno — o
    * "role" aqui reflete o de MAIOR privilégio, mas os arrays
-   * (teacherCourseIds) e activeEnrollment continuam disponíveis para
+   * (teacherCohortIds) e activeEnrollment continuam disponíveis para
    * quem precisar do detalhe.
    */
   role: AppRole;
@@ -58,31 +59,37 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   const isAdmin = profile?.is_admin ?? false;
 
   let memberName: string | null = null;
-  let teacherCourseIds: string[] = [];
+  let teacherCohortIds: string[] = [];
   let activeEnrollment: ActiveEnrollmentSummary | null = null;
 
   if (memberId) {
     const [memberResult, teacherResult, enrollmentResult] = await Promise.all([
       supabase.from('members').select('nome').eq('id', memberId).maybeSingle(),
-      supabase.from('teacher_courses').select('course_id').eq('teacher_id', memberId),
+      supabase.from('teacher_cohorts').select('cohort_id').eq('teacher_id', memberId),
       supabase
         .from('enrollments')
-        .select('id, course_id, courses(code, name)')
+        .select('id, cohort_id, cohorts(course_id, courses(code, name))')
         .eq('student_id', memberId)
         .eq('status', 'ACTIVE')
         .maybeSingle(),
     ]);
 
     memberName = memberResult.data?.nome ?? null;
-    teacherCourseIds = (teacherResult.data ?? []).map((row) => row.course_id);
+    teacherCohortIds = (teacherResult.data ?? []).map((row) => row.cohort_id);
 
     const enrollment = enrollmentResult.data;
-    if (enrollment && enrollment.courses) {
-      const course = Array.isArray(enrollment.courses) ? enrollment.courses[0] : enrollment.courses;
-      if (course) {
+    if (enrollment && enrollment.cohorts) {
+      const cohort = Array.isArray(enrollment.cohorts) ? enrollment.cohorts[0] : enrollment.cohorts;
+      const course = cohort?.courses
+        ? Array.isArray(cohort.courses)
+          ? cohort.courses[0]
+          : cohort.courses
+        : null;
+      if (cohort && course) {
         activeEnrollment = {
           enrollmentId: enrollment.id,
-          courseId: enrollment.course_id,
+          cohortId: enrollment.cohort_id,
+          courseId: cohort.course_id,
           courseCode: course.code,
           courseName: course.name,
         };
@@ -93,7 +100,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   let role: AppRole = 'SEM_ACESSO';
   if (isAdmin) {
     role = 'ADMIN';
-  } else if (teacherCourseIds.length > 0) {
+  } else if (teacherCohortIds.length > 0) {
     role = 'PROFESSOR';
   } else if (activeEnrollment) {
     role = 'ALUNO';
@@ -105,7 +112,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     memberId,
     memberName,
     isAdmin,
-    teacherCourseIds,
+    teacherCohortIds,
     activeEnrollment,
     role,
   };

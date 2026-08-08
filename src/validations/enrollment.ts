@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const enrollExistingStudentSchema = z.object({
   mode: z.literal('existing'),
   studentId: z.string().uuid('Selecione um aluno.'),
-  courseId: z.string().uuid(),
+  cohortId: z.string().uuid(),
 });
 
 export const enrollNewStudentSchema = z.object({
@@ -12,7 +12,7 @@ export const enrollNewStudentSchema = z.object({
   email: z.string().trim().min(1, 'Informe o e-mail.').email('E-mail inválido.'),
   tel: z.string().trim().optional(),
   celula: z.string().trim().min(1, 'Selecione uma célula.'),
-  courseId: z.string().uuid(),
+  cohortId: z.string().uuid(),
 });
 
 export const enrollStudentSchema = z.discriminatedUnion('mode', [
@@ -24,15 +24,23 @@ export type EnrollStudentInput = z.infer<typeof enrollStudentSchema>;
 
 export const endEnrollmentSchema = z.object({
   enrollmentId: z.string().uuid(),
-  status: z.enum(['COMPLETED', 'CANCELLED', 'TRANSFERRED']),
 });
 
 export type EndEnrollmentInput = z.infer<typeof endEnrollmentSchema>;
 
-export const changeEnrollmentSchema = z.object({
-  studentId: z.string().uuid(),
-  newCourseId: z.string().uuid(),
-  endStatus: z.enum(['COMPLETED', 'CANCELLED', 'TRANSFERRED']).default('TRANSFERRED'),
+export const dropoutReasonOptions = [
+  'MUDANCA',
+  'SAUDE',
+  'TRABALHO',
+  'DESINTERESSE',
+  'OUTRO',
+] as const;
+
+export const markDropoutSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  droppedOutAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida.'),
+  reason: z.enum(dropoutReasonOptions).optional(),
+  notes: z.string().trim().optional(),
 });
 
-export type ChangeEnrollmentInput = z.infer<typeof changeEnrollmentSchema>;
+export type MarkDropoutInput = z.infer<typeof markDropoutSchema>;

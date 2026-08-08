@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
-import { listClassesAction } from '@/features/classes/actions';
+import { listUpcomingClassSessionsForTeacherAction } from '@/features/class-sessions/actions';
 import { getAdminDashboardDataAction, getStudentDashboardDataAction } from '@/features/dashboard/actions';
 import { AdminDashboard } from '@/features/dashboard/admin-dashboard';
 import { ProfessorDashboard } from '@/features/dashboard/professor-dashboard';
@@ -19,8 +19,7 @@ export default async function DashboardPage() {
   }
 
   if (user.role === 'PROFESSOR') {
-    const allClasses = await listClassesAction();
-    const upcomingClasses = allClasses.filter((c) => user.teacherCourseIds.includes(c.course_id));
+    const upcomingClasses = await listUpcomingClassSessionsForTeacherAction(user.teacherCohortIds);
     return <ProfessorDashboard nome={user.memberName ?? ''} upcomingClasses={upcomingClasses} />;
   }
 

@@ -2,19 +2,20 @@ import Link from 'next/link';
 import { CourseBadge } from '@/components/shared/course-badge';
 import { ClassStatusBadge } from '@/components/shared/class-status-badge';
 import { formatDate, formatTimeColumn } from '@/lib/format';
-import { weekdayLabel } from '@/lib/domain/calendar';
-import type { ClassStatus } from '@/types/database';
+import { formatWeekday } from '@/lib/domain/weekday';
+import type { ClassSessionStatus } from '@/types/database';
 
 export interface ClassCardData {
   id: string;
   courseCode: string;
   courseName: string;
-  classNumber: number;
-  title: string;
+  cohortName: string;
+  lessonCode: string;
+  lessonTitle: string;
   classDate: string;
   startTime: string;
   endTime: string;
-  status: ClassStatus;
+  status: ClassSessionStatus;
 }
 
 export function ClassCard({ data, actions }: { data: ClassCardData; actions?: React.ReactNode }) {
@@ -23,13 +24,14 @@ export function ClassCard({ data, actions }: { data: ClassCardData; actions?: Re
       <Link href={`/aulas/${data.id}`} className="flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <CourseBadge code={data.courseCode} name={data.courseName} />
+          <span className="text-xs text-muted-foreground">{data.cohortName}</span>
           <ClassStatusBadge status={data.status} />
         </div>
         <p className="font-medium text-foreground">
-          Aula {data.classNumber} — {data.title}
+          {data.lessonCode} — {data.lessonTitle}
         </p>
         <p className="text-sm text-muted-foreground">
-          {formatDate(data.classDate)} ({weekdayLabel(data.classDate)}) · {formatTimeColumn(data.startTime)}–
+          {formatDate(data.classDate)} ({formatWeekday(data.classDate)}) · {formatTimeColumn(data.startTime)}–
           {formatTimeColumn(data.endTime)}
         </p>
       </Link>

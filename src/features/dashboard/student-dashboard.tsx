@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AbsenceProgress } from '@/components/shared/absence-progress';
 import { AttendanceStatusBadge } from '@/components/shared/attendance-status-badge';
@@ -63,14 +61,10 @@ export function StudentDashboard({ data }: { data: StudentDashboardData }) {
         </div>
       </div>
 
-      <Button
-        render={<Link href="/presenca" />}
-        size="lg"
-        disabled={!data.canCheckInNow}
-        className="h-14 w-full text-base"
-      >
-        {data.canCheckInNow ? 'Registrar presença' : 'Nenhuma chamada aberta agora'}
-      </Button>
+      <div className="rounded-xl border border-dashed border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+        A presença agora é registrada pelo link de check-in da sua turma, compartilhado pela
+        liderança — não é mais preciso fazer login para confirmar presença.
+      </div>
 
       <div>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Histórico</h2>
@@ -88,9 +82,11 @@ export function StudentDashboard({ data }: { data: StudentDashboardData }) {
               </TableHeader>
               <TableBody>
                 {data.recentHistory.map((row) => (
-                  <TableRow key={row.classId}>
+                  <TableRow key={row.classSessionId}>
                     <TableCell>{formatDate(row.classDate)}</TableCell>
-                    <TableCell>Aula {row.classNumber}</TableCell>
+                    <TableCell>
+                      {row.lessonCode} · {row.lessonTitle}
+                    </TableCell>
                     <TableCell>
                       <AttendanceStatusBadge status={row.status} />
                     </TableCell>

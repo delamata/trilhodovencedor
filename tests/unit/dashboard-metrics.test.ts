@@ -48,12 +48,12 @@ describe('computeAdminDashboardMetrics', () => {
 describe('computePresenceByClass', () => {
   it('calcula presentes/total e percentual por aula', () => {
     const result = computePresenceByClass(
-      [{ classId: 'c1', label: 'Aula 1', classDate: '2026-08-11' }],
+      [{ classSessionId: 'c1', label: 'Aula 1', classDate: '2026-08-11' }],
       [
-        { classId: 'c1', status: 'PRESENTE' },
-        { classId: 'c1', status: 'PRESENTE' },
-        { classId: 'c1', status: 'FALTA' },
-        { classId: 'c1', status: 'FALTA_JUSTIFICADA' },
+        { classSessionId: 'c1', status: 'PRESENTE' },
+        { classSessionId: 'c1', status: 'PRESENTE' },
+        { classSessionId: 'c1', status: 'FALTA' },
+        { classSessionId: 'c1', status: 'FALTA_JUSTIFICADA' },
       ],
     );
 
@@ -61,14 +61,17 @@ describe('computePresenceByClass', () => {
   });
 
   it('retorna 0/0/0% para aula sem nenhum registro de presença lançado', () => {
-    const result = computePresenceByClass([{ classId: 'c2', label: 'Aula 2', classDate: '2026-08-18' }], []);
+    const result = computePresenceByClass(
+      [{ classSessionId: 'c2', label: 'Aula 2', classDate: '2026-08-18' }],
+      [],
+    );
     expect(result[0]).toMatchObject({ present: 0, total: 0, pct: 0 });
   });
 
   it('ignora registros de presença de aulas fora da lista informada', () => {
     const result = computePresenceByClass(
-      [{ classId: 'c1', label: 'Aula 1', classDate: '2026-08-11' }],
-      [{ classId: 'other-class', status: 'PRESENTE' }],
+      [{ classSessionId: 'c1', label: 'Aula 1', classDate: '2026-08-11' }],
+      [{ classSessionId: 'other-session', status: 'PRESENTE' }],
     );
     expect(result[0]).toMatchObject({ present: 0, total: 0 });
   });

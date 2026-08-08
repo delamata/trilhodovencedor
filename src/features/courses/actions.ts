@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/current-user';
+import { friendlyRpcError } from '@/lib/errors';
 import { courseConfigSchema, type CourseConfigInput } from '@/validations/course';
-import type { CoursesRow } from '@/types/database';
+import type { CoursesRow, LessonTemplatesRow } from '@/types/database';
 
 export interface ActionResult {
   success: boolean;
@@ -14,9 +15,7 @@ export interface ActionResult {
 export async function listCoursesAction(): Promise<CoursesRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from('courses').select('*').order('name');
-  if (error || !data) {
-    return [];
-  }
+  if (error || !data) return [];
   return data;
 }
 
@@ -56,100 +55,77 @@ export async function updateCourseConfigAction(
   return { success: true, message: 'Configuração do curso salva com sucesso.' };
 }
 
-export interface TeacherRow {
-  teacherId: string;
-  nome: string;
+// ---------------------------------------------------------------------
+// Estrutura acadêmica (módulos/aulas — lesson_templates)
+// ---------------------------------------------------------------------
+export interface ModuleGroup {
+  moduleNumber: number;
+  lessons: LessonTemplatesRow[];
 }
 
-export async function listTeachersForCourseAction(courseId: string): Promise<TeacherRow[]> {
+export async function listCourseStructureAction(courseId: string): Promise<ModuleGroup[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('teacher_courses')
-    .select('teacher_id, members(nome)')
-    .eq('course_id', courseId);
+  const { data } = await supabase
+    .from('lesson_templates')
+    .select('*')
+    .eq('course_id', courseId)
+    .order('module_number')
+    .order('lesson_number');
 
-  if (error || !data) {
-    return [];
+  const byModule = new Map<number, LessonTemplatesRow[]>();
+  for (const row of data ?? []) {
+    const list = byModule.get(row.module_number) ?? [];
+    list.push(row);
+    byModule.set(row.module_number, list);
   }
 
-  return data.map((row) => {
-    const member = Array.isArray(row.members) ? row.members[0] : row.members;
-    return { teacherId: row.teacher_id, nome: member?.nome ?? '—' };
-  });
+  return Array.from(byModule.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([moduleNumber, lessons]) => ({ moduleNumber, lessons }));
 }
 
-export async function addTeacherToCourseAction(
+export async function addModuleAction(
   courseId: string,
-  teacherId: string,
+  lesson1Title: string,
+  lesson2Title: string,
+  description?: string,
 ): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from('teacher_courses')
-    .insert({ course_id: courseId, teacher_id: teacherId });
+  const { error } = await supabase.rpc('trilho_add_module', {
+    p_course_id: courseId,
+    p_lesson1_title: lesson1Title,
+    p_lesson2_title: lesson2Title,
+    p_description: description || null,
+  });
 
   if (error) {
-    return {
-      success: false,
-      message: error.code === '23505' ? 'Este professor já leciona este curso.' : 'Não foi possível adicionar o professor.',
-    };
+    return { success: false, message: friendlyRpcError(error.message) };
   }
 
   revalidatePath(`/cursos/${courseId}`);
-  return { success: true, message: 'Professor adicionado ao curso.' };
+  return { success: true, message: 'Módulo criado com sucesso.' };
 }
 
-export async function removeTeacherFromCourseAction(
-  courseId: string,
-  teacherId: string,
+export async function updateLessonTemplateAction(
+  lessonTemplateId: string,
+  title: string,
+  description?: string,
 ): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from('teacher_courses')
-    .delete()
-    .eq('course_id', courseId)
-    .eq('teacher_id', teacherId);
+  const { error } = await supabase.rpc('trilho_update_lesson_template', {
+    p_id: lessonTemplateId,
+    p_title: title,
+    p_description: description || null,
+  });
 
   if (error) {
-    return { success: false, message: 'Não foi possível remover o professor.' };
+    return { success: false, message: friendlyRpcError(error.message) };
   }
 
-  revalidatePath(`/cursos/${courseId}`);
-  return { success: true, message: 'Professor removido do curso.' };
-}
-
-export interface EnrolledStudentRow {
-  enrollmentId: string;
-  studentId: string;
-  nome: string;
-  enrolledAt: string;
-}
-
-export async function listActiveStudentsForCourseAction(
-  courseId: string,
-): Promise<EnrolledStudentRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('enrollments')
-    .select('id, student_id, enrolled_at, members(nome)')
-    .eq('course_id', courseId)
-    .eq('status', 'ACTIVE')
-    .order('enrolled_at', { ascending: false });
-
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map((row) => {
-    const member = Array.isArray(row.members) ? row.members[0] : row.members;
-    return {
-      enrollmentId: row.id,
-      studentId: row.student_id,
-      nome: member?.nome ?? '—',
-      enrolledAt: row.enrolled_at,
-    };
-  });
+  revalidatePath('/cursos');
+  return { success: true, message: 'Aula atualizada com sucesso.' };
 }

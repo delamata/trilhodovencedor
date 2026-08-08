@@ -14,6 +14,7 @@ const REPORTS = [
   { type: 'faltas', title: 'Faltas', description: 'Todos os registros de falta e falta justificada, aula a aula.' },
   { type: 'alunos-em-risco', title: 'Alunos em risco', description: 'Alunos em alerta, no limite ou com o limite de faltas excedido.' },
   { type: 'historico-completo', title: 'Histórico completo', description: 'Todos os registros de presença de todos os alunos, com origem.' },
+  { type: 'desistencias', title: 'Desistências', description: 'Alunos que desistiram, com motivo, observações e presença até a desistência.' },
 ] as const;
 
 export default async function RelatoriosPage() {

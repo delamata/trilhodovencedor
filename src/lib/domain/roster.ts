@@ -23,12 +23,12 @@ export interface RosterEntry {
 }
 
 /**
- * Combina a lista de alunos matriculados ativos com os registros de
- * presença já lançados para uma aula específica. Quem ainda não tem
- * registro aparece como "PENDENTE" (chamada aberta e ele ainda não
- * confirmou, ou chamada nem foi aberta ainda) — nunca como FALTA até a
- * chamada ser encerrada de verdade (isso é feito no banco, por
- * trilho_close_attendance_session()).
+ * Combina a lista de alunos matriculados ativos numa turma com os
+ * registros de presença já lançados para uma aula (class_session)
+ * específica. Quem ainda não tem registro aparece como "PENDENTE"
+ * (chamada aberta e ele ainda não confirmou, ou chamada nem foi
+ * aberta ainda) — nunca como FALTA até a chamada ser encerrada de
+ * verdade (isso é feito no banco, por trilho_close_class_session()).
  */
 export function mergeRosterWithAttendance(
   enrollments: RosterEnrollment[],
