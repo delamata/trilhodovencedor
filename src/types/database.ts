@@ -49,6 +49,12 @@ export type ProfilesRow = {
   created_at: string;
 };
 
+export type CelulaHierarquiaRow = {
+  celula: string;
+  discipulador_id: string | null;
+  obreiro_id: string | null;
+};
+
 export type CoursesRow = {
   id: string;
   code: string;
@@ -192,6 +198,12 @@ export interface Database {
         Row: MembersRow;
         Insert: Partial<MembersRow>;
         Update: Partial<MembersRow>;
+        Relationships: [];
+      };
+      celula_hierarquia: {
+        Row: CelulaHierarquiaRow;
+        Insert: Partial<CelulaHierarquiaRow>;
+        Update: Partial<CelulaHierarquiaRow>;
         Relationships: [];
       };
       profiles: {
