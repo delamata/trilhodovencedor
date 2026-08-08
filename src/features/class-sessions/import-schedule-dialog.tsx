@@ -42,11 +42,19 @@ function normalizeDate(raw: string): string | null {
   return null;
 }
 
-function detectDelimiter(text: string): string {
+/**
+ * Aceita vírgula, ponto e vírgula, tabulação (colar do Excel/Sheets
+ * cola como TSV) ou — se nada disso aparecer — 2+ espaços seguidos
+ * (colar de uma tabela alinhada visualmente, como texto plano).
+ */
+function detectSplitter(text: string): RegExp {
   const firstLine = text.split('\n')[0] ?? '';
+  if (firstLine.includes('\t')) return /\t+/;
   const semicolons = (firstLine.match(/;/g) ?? []).length;
   const commas = (firstLine.match(/,/g) ?? []).length;
-  return semicolons > commas ? ';' : ',';
+  if (semicolons > 0 && semicolons >= commas) return /;/;
+  if (commas > 0) return /,/;
+  return /\s{2,}/;
 }
 
 function parseCsv(text: string): ParsedRow[] {
@@ -56,11 +64,11 @@ function parseCsv(text: string): ParsedRow[] {
     .filter((line) => line.length > 0);
   if (lines.length === 0) return [];
 
-  const delimiter = detectDelimiter(text);
+  const splitter = detectSplitter(text);
   const dataLines = lines[0]?.toLowerCase().startsWith('numero') ? lines.slice(1) : lines;
 
   return dataLines.map((line, index) => {
-    const cols = line.split(delimiter).map((c) => c.trim());
+    const cols = line.split(splitter).map((c) => c.trim());
     const [numeroRaw, titulo, dataRaw, horarioInicio, horarioFim] = cols;
 
     const numero = Number(numeroRaw);
@@ -134,9 +142,11 @@ export function ImportScheduleDialog({
         <DialogHeader>
           <DialogTitle>Importar estrutura + calendário — {cohortLabel}</DialogTitle>
           <DialogDescription>
-            Cole uma linha por aula: numero,titulo,data,horario_inicio,horario_fim. A cada 2 linhas
-            (aula 1 e aula 2) um módulo é criado — se o módulo já existir no curso, é reaproveitado.
-            Cada aula já fica agendada nesta turma, na data informada.
+            Cole uma linha por aula: numero, titulo, data, horario_inicio, horario_fim. Aceita
+            vírgula, ponto e vírgula, ou colar direto de uma planilha (Excel/Google Sheets). A cada
+            2 linhas (aula 1 e aula 2) um módulo é criado — se o módulo já existir no curso, é
+            reaproveitado. Cada aula já fica agendada nesta turma, na data informada. Data em
+            AAAA-MM-DD ou DD/MM/AAAA.
           </DialogDescription>
         </DialogHeader>
 
