@@ -11,6 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   TURMA_NAO_ENCONTRADA_OU_JA_ATIVA: 'Turma não encontrada ou já está ativa.',
   TURMA_NAO_ENCONTRADA_OU_JA_ENCERRADA: 'Turma não encontrada ou já foi encerrada.',
   TURMA_JA_FINALIZADA: 'Esta turma já foi finalizada.',
+  TURMA_NAO_PODE_SER_EXCLUIDA: 'Só é possível excluir turmas finalizadas ou canceladas.',
   TURMA_NAO_ESTA_ATIVA: 'Esta turma não está ativa no momento.',
   AULA_NAO_ENCONTRADA: 'Aula não encontrada.',
   AULA_CANCELADA: 'Esta aula foi cancelada.',

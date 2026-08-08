@@ -29,11 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
   CANCELLED: 'Cancelada',
 };
 
-export default async function TurmaDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function TurmaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const user = await getCurrentUser();
@@ -61,7 +57,11 @@ export default async function TurmaDetailPage({
       <PageHeader
         title={`${cohort.code} — ${cohort.name}`}
         description={`${cohort.courseName} · ${formatDate(cohort.start_date)} – ${formatDate(cohort.end_date)}`}
-        actions={<Badge variant={cohort.status === 'ACTIVE' ? 'secondary' : 'outline'}>{STATUS_LABEL[cohort.status] ?? cohort.status}</Badge>}
+        actions={
+          <Badge variant={cohort.status === 'ACTIVE' ? 'secondary' : 'outline'}>
+            {STATUS_LABEL[cohort.status] ?? cohort.status}
+          </Badge>
+        }
       />
 
       {user.isAdmin ? (
@@ -118,7 +118,12 @@ export default async function TurmaDetailPage({
           <CalendarDays className="h-4 w-4" aria-hidden="true" />
           Aulas
         </h2>
-        <ClassSessionsPanel cohortId={cohort.id} sessions={sessions} lessonOptions={lessonOptions} />
+        <ClassSessionsPanel
+          cohortId={cohort.id}
+          cohortLabel={`${cohort.code} — ${cohort.name}`}
+          sessions={sessions}
+          lessonOptions={lessonOptions}
+        />
       </section>
 
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">

@@ -573,6 +573,7 @@ export interface Database {
         Returns: number;
       };
       trilho_finalize_cohort: { Args: { p_cohort_id: string }; Returns: FinalizeCohortResult[] };
+      trilho_delete_cohort: { Args: { p_cohort_id: string }; Returns: undefined };
       trilho_public_get_status: {
         Args: { p_cohort_code: string; p_token: string };
         Returns: PublicGetStatusResult[];

@@ -30,13 +30,16 @@ import { formatDate, formatTimeColumn } from '@/lib/format';
 import { formatWeekday } from '@/lib/domain/weekday';
 import type { LessonTemplatesRow } from '@/types/database';
 import { createClassSessionAction, type ClassSessionListItem } from './actions';
+import { ImportScheduleDialog } from './import-schedule-dialog';
 
 export function ClassSessionsPanel({
   cohortId,
+  cohortLabel,
   sessions,
   lessonOptions,
 }: {
   cohortId: string;
+  cohortLabel: string;
   sessions: ClassSessionListItem[];
   lessonOptions: LessonTemplatesRow[];
 }) {
@@ -79,63 +82,90 @@ export function ClassSessionsPanel({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {sessions.length} aula{sessions.length === 1 ? '' : 's'} agendada{sessions.length === 1 ? '' : 's'}
+          {sessions.length} aula{sessions.length === 1 ? '' : 's'} agendada
+          {sessions.length === 1 ? '' : 's'}
         </p>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Agendar aula
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Agendar aula</DialogTitle>
-              <DialogDescription>
-                Escolha qual aula do módulo será dada e quando. O dia da semana é calculado
-                automaticamente a partir da data.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="lesson">Aula</Label>
-                <Select value={lessonTemplateId} onValueChange={(v) => setLessonTemplateId(v ?? '')}>
-                  <SelectTrigger id="lesson">
-                    <SelectValue placeholder="Selecione a aula" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {lessonOptions.map((lesson) => (
-                      <SelectItem key={lesson.id} value={lesson.id}>
-                        {lesson.lesson_code} — {lesson.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="date">Data{date ? ` (${formatWeekday(date)})` : ''}</Label>
-                <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center gap-2">
+          <ImportScheduleDialog cohortId={cohortId} cohortLabel={cohortLabel} />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger render={<Button size="sm" />}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Agendar aula
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Agendar aula</DialogTitle>
+                <DialogDescription>
+                  Escolha qual aula do módulo será dada e quando. O dia da semana é calculado
+                  automaticamente a partir da data.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="start">Início</Label>
-                  <Input id="start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                  <Label htmlFor="lesson">Aula</Label>
+                  <Select
+                    value={lessonTemplateId}
+                    onValueChange={(v) => setLessonTemplateId(v ?? '')}
+                  >
+                    <SelectTrigger id="lesson">
+                      <SelectValue placeholder="Selecione a aula" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lessonOptions.map((lesson) => (
+                        <SelectItem key={lesson.id} value={lesson.id}>
+                          {lesson.lesson_code} — {lesson.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="end">Término</Label>
-                  <Input id="end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                  <Label htmlFor="date">Data{date ? ` (${formatWeekday(date)})` : ''}</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="start">Início</Label>
+                    <Input
+                      id="start"
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="end">Término</Label>
+                    <Input
+                      id="end"
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="notes">Observações (opcional)</Label>
+                  <Textarea
+                    id="notes"
+                    rows={2}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="notes">Observações (opcional)</Label>
-                <Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleCreate} disabled={submitting || !lessonTemplateId || !date}>
-                {submitting ? 'Agendando…' : 'Agendar aula'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button onClick={handleCreate} disabled={submitting || !lessonTemplateId || !date}>
+                  {submitting ? 'Agendando…' : 'Agendar aula'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {sessions.length === 0 ? (

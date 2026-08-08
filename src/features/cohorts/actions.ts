@@ -4,7 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/current-user';
 import { friendlyRpcError } from '@/lib/errors';
-import { createCohortSchema, updateCohortSchema, type CreateCohortInput, type UpdateCohortInput } from '@/validations/cohort';
+import {
+  createCohortSchema,
+  updateCohortSchema,
+  type CreateCohortInput,
+  type UpdateCohortInput,
+} from '@/validations/cohort';
 import type { CohortsRow, CoursesRow, FinalizeCohortResult } from '@/types/database';
 
 export interface ActionResult {
@@ -18,8 +23,21 @@ export interface CohortListItem extends CohortsRow {
   activeEnrollments: number;
 }
 
-/** Lista todas as turmas (com o curso já resolvido), mais recentes primeiro. */
-export async function listCohortsAction(courseId?: string): Promise<CohortListItem[]> {
+export type CohortSortField =
+  'code' | 'courseName' | 'start_date' | 'end_date' | 'activeEnrollments' | 'status';
+export type SortDirection = 'asc' | 'desc';
+
+/**
+ * Lista todas as turmas (com o curso já resolvido). Sem `sort`, vem
+ * mais recentes primeiro. A contagem de alunos ativos é calculada em
+ * memória, então a ordenação por ela (e por curso, que vem de um join)
+ * também é feita em memória — o volume de turmas nunca justifica
+ * ordenar isso no banco.
+ */
+export async function listCohortsAction(
+  courseId?: string,
+  sort?: { field: CohortSortField; dir: SortDirection },
+): Promise<CohortListItem[]> {
   const supabase = await createClient();
 
   let query = supabase
@@ -34,7 +52,11 @@ export async function listCohortsAction(courseId?: string): Promise<CohortListIt
 
   const cohortIds = data.map((c) => c.id);
   const { data: enrollmentCounts } = cohortIds.length
-    ? await supabase.from('enrollments').select('cohort_id').eq('status', 'ACTIVE').in('cohort_id', cohortIds)
+    ? await supabase
+        .from('enrollments')
+        .select('cohort_id')
+        .eq('status', 'ACTIVE')
+        .in('cohort_id', cohortIds)
     : { data: [] };
 
   const countByCohort = new Map<string, number>();
@@ -42,7 +64,7 @@ export async function listCohortsAction(courseId?: string): Promise<CohortListIt
     countByCohort.set(row.cohort_id, (countByCohort.get(row.cohort_id) ?? 0) + 1);
   }
 
-  return data.map((row) => {
+  const items = data.map((row) => {
     const course = Array.isArray(row.courses) ? row.courses[0] : row.courses;
     const { courses: _courses, ...cohort } = row;
     return {
@@ -51,6 +73,17 @@ export async function listCohortsAction(courseId?: string): Promise<CohortListIt
       courseName: course?.name ?? '—',
       activeEnrollments: countByCohort.get(row.id) ?? 0,
     };
+  });
+
+  if (!sort) return items;
+
+  const { field, dir } = sort;
+  const factor = dir === 'asc' ? 1 : -1;
+  return [...items].sort((a, b) => {
+    const av = a[field];
+    const bv = b[field];
+    if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * factor;
+    return String(av).localeCompare(String(bv), 'pt-BR') * factor;
   });
 }
 
@@ -115,7 +148,9 @@ export async function listCohortOptionsForCourseAction(
   return (data ?? []).map((c) => ({ id: c.id, label: `${c.code} — ${c.name}` }));
 }
 
-export async function createCohortAction(input: CreateCohortInput): Promise<ActionResult & { id?: string }> {
+export async function createCohortAction(
+  input: CreateCohortInput,
+): Promise<ActionResult & { id?: string }> {
   const parsed = createCohortSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, message: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
@@ -187,12 +222,24 @@ export async function cancelCohortAction(cohortId: string): Promise<ActionResult
   return { success: true, message: 'Turma cancelada.' };
 }
 
+/** Exclui uma turma antiga (só FINISHED/CANCELLED — checado também no banco). Apaga aulas/matrículas dela junto. */
+export async function deleteCohortAction(cohortId: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('trilho_delete_cohort', { p_cohort_id: cohortId });
+  if (error) return { success: false, message: friendlyRpcError(error.message) };
+  revalidatePath('/turmas');
+  return { success: true, message: 'Turma excluída.' };
+}
+
 export async function regeneratePublicTokenAction(
   cohortId: string,
 ): Promise<ActionResult & { token?: string }> {
   await requireAdmin();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('trilho_regenerate_public_token', { p_cohort_id: cohortId });
+  const { data, error } = await supabase.rpc('trilho_regenerate_public_token', {
+    p_cohort_id: cohortId,
+  });
   if (error) return { success: false, message: friendlyRpcError(error.message) };
   revalidatePath(`/turmas/${cohortId}`);
   return { success: true, message: 'Novo link gerado.', token: data?.[0]?.token };
@@ -210,7 +257,10 @@ export async function setPublicAttendanceEnabledAction(
   });
   if (error) return { success: false, message: friendlyRpcError(error.message) };
   revalidatePath(`/turmas/${cohortId}`);
-  return { success: true, message: enabled ? 'Link de presença ativado.' : 'Link de presença desativado.' };
+  return {
+    success: true,
+    message: enabled ? 'Link de presença ativado.' : 'Link de presença desativado.',
+  };
 }
 
 export async function finalizeCohortAction(
@@ -303,21 +353,32 @@ export async function listTeachersForCohortAction(cohortId: string): Promise<Tea
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
-export async function addTeacherToCohortAction(cohortId: string, teacherId: string): Promise<ActionResult> {
+export async function addTeacherToCohortAction(
+  cohortId: string,
+  teacherId: string,
+): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from('teacher_cohorts').insert({ cohort_id: cohortId, teacher_id: teacherId });
+  const { error } = await supabase
+    .from('teacher_cohorts')
+    .insert({ cohort_id: cohortId, teacher_id: teacherId });
   if (error) {
     return {
       success: false,
-      message: error.code === '23505' ? 'Este professor já está vinculado a esta turma.' : 'Não foi possível vincular o professor.',
+      message:
+        error.code === '23505'
+          ? 'Este professor já está vinculado a esta turma.'
+          : 'Não foi possível vincular o professor.',
     };
   }
   revalidatePath(`/turmas/${cohortId}`);
   return { success: true, message: 'Professor vinculado à turma.' };
 }
 
-export async function removeTeacherFromCohortAction(cohortId: string, teacherId: string): Promise<ActionResult> {
+export async function removeTeacherFromCohortAction(
+  cohortId: string,
+  teacherId: string,
+): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase
@@ -345,7 +406,9 @@ export async function listCohortRosterAction(cohortId: string): Promise<CohortRo
   const supabase = await createClient();
   const { data } = await supabase
     .from('enrollments')
-    .select('id, student_id, status, academic_result, enrolled_at, dropped_out_at, members(nome, tel)')
+    .select(
+      'id, student_id, status, academic_result, enrolled_at, dropped_out_at, members(nome, tel)',
+    )
     .eq('cohort_id', cohortId)
     .order('enrolled_at', { ascending: false });
 
