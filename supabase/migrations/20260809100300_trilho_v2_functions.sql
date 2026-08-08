@@ -422,6 +422,11 @@ begin
 end;
 $$;
 
+-- v1 tinha trilho_mark_attendance(p_class_id, ...) — Postgres não deixa
+-- CREATE OR REPLACE renomear parâmetro (só trocar tipo/corpo), então
+-- precisa dropar antes de recriar com p_class_session_id.
+drop function if exists trilho_mark_attendance(uuid, uuid, text, text);
+
 create or replace function trilho_mark_attendance(
   p_class_session_id uuid, p_student_id uuid, p_status text, p_reason text default null
 ) returns uuid
@@ -482,6 +487,11 @@ $$;
 -- ---------------------------------------------------------------------
 -- Matrícula
 -- ---------------------------------------------------------------------
+-- v1 tinha trilho_enroll_student(p_student_id, p_course_id) — mesmo
+-- caso de trilho_mark_attendance acima: precisa dropar antes de
+-- recriar com o segundo parâmetro renomeado para p_cohort_id.
+drop function if exists trilho_enroll_student(uuid, uuid);
+
 create or replace function trilho_enroll_student(p_student_id uuid, p_cohort_id uuid)
 returns uuid
 language plpgsql security definer as $$
