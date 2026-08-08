@@ -16,8 +16,8 @@ import { listCohortOptionsForCourseAction, updateCohortAction } from './actions'
 /**
  * Só faz sentido numa turma de Maturidade: define para qual turma de
  * CTL os aprovados devem ser promovidos automaticamente ao finalizar
- * (seção 13-16). `next_ctl_cohort_id` também é a mesma coluna usada
- * por trilho_generate_ctl_calendar para achar a turma de origem.
+ * (BR-009). Maturidade e CTL têm calendários de aula independentes —
+ * este campo não tem nenhum efeito sobre o agendamento de aulas.
  */
 export function NextCtlCohortSelector({
   cohortId,
@@ -68,7 +68,8 @@ export function NextCtlCohortSelector({
     <div className="space-y-2">
       <p className="text-sm text-muted-foreground">
         Turma de CTL para onde os aprovados nesta turma serão promovidos automaticamente ao
-        finalizar. Também é a turma usada para calcular o calendário de CTL a partir das terças.
+        finalizar. O calendário de aulas de cada turma continua independente — as aulas de CTL
+        são agendadas manualmente, como em qualquer turma.
       </p>
       <div className="flex items-center gap-2">
         <Select value={value} onValueChange={(v) => setValue(v ?? 'none')}>

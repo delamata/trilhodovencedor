@@ -10,8 +10,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   TURMA_NAO_ENCONTRADA: 'Turma não encontrada.',
   TURMA_NAO_ENCONTRADA_OU_JA_ATIVA: 'Turma não encontrada ou já está ativa.',
   TURMA_NAO_ENCONTRADA_OU_JA_ENCERRADA: 'Turma não encontrada ou já foi encerrada.',
-  TURMA_MATURIDADE_RELACIONADA_NAO_ENCONTRADA:
-    'Esta turma de CTL não está vinculada a uma turma de Maturidade. Configure a turma de origem antes de gerar o calendário.',
   TURMA_JA_FINALIZADA: 'Esta turma já foi finalizada.',
   TURMA_NAO_ESTA_ATIVA: 'Esta turma não está ativa no momento.',
   AULA_NAO_ENCONTRADA: 'Aula não encontrada.',

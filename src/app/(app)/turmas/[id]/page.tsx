@@ -18,7 +18,6 @@ import { PublicLinkPanel } from '@/features/cohorts/public-link-panel';
 import { TeacherCohortPanel } from '@/features/cohorts/teacher-cohort-panel';
 import { CohortRosterPanel } from '@/features/enrollments/cohort-roster-panel';
 import { ClassSessionsPanel } from '@/features/class-sessions/class-sessions-panel';
-import { CtlCalendarPanel } from '@/features/cohorts/ctl-calendar-panel';
 import { NextCtlCohortSelector } from '@/features/cohorts/next-ctl-cohort-selector';
 
 export const metadata: Metadata = { title: 'Turma — Trilho do Vencedor' };
@@ -85,16 +84,6 @@ export default async function TurmaDetailPage({
             ctlCourseId={ctlCourse.id}
             currentNextCohortId={cohort.next_ctl_cohort_id}
           />
-        </section>
-      ) : null}
-
-      {user.isAdmin && cohort.courseCode === 'CTL' ? (
-        <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-            <CalendarDays className="h-4 w-4" aria-hidden="true" />
-            Gerar calendário a partir do Maturidade
-          </h2>
-          <CtlCalendarPanel cohortId={cohort.id} />
         </section>
       ) : null}
 

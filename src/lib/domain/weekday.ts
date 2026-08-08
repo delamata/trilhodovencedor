@@ -36,8 +36,3 @@ export function formatWeekday(isoDate: string): string {
   if (index === null) return '';
   return WEEKDAY_LABEL_PT[index] ?? '';
 }
-
-/** true quando a data cai numa terça-feira (BR-007: CTL só nesses dias). */
-export function isTuesday(isoDate: string): boolean {
-  return getWeekdayIndex(isoDate) === 2;
-}

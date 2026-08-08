@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatWeekday, getWeekdayIndex, isTuesday } from '@/lib/domain/weekday';
+import { formatWeekday, getWeekdayIndex } from '@/lib/domain/weekday';
 
 describe('formatWeekday', () => {
   it('TESTE 4 — 11/08/2026 -> Terça-feira', () => {
@@ -31,15 +31,9 @@ describe('formatWeekday', () => {
   });
 });
 
-describe('isTuesday / getWeekdayIndex', () => {
+describe('getWeekdayIndex', () => {
   it('confirma dow do Postgres (0=domingo ... 2=terça)', () => {
     expect(getWeekdayIndex('2026-08-09')).toBe(0);
     expect(getWeekdayIndex('2026-08-11')).toBe(2);
-  });
-
-  it('isTuesday só é true na terça-feira', () => {
-    expect(isTuesday('2026-08-11')).toBe(true);
-    expect(isTuesday('2026-08-10')).toBe(false);
-    expect(isTuesday('2026-08-12')).toBe(false);
   });
 });

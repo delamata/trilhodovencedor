@@ -45,8 +45,7 @@ Nenhuma tela pede "dia da semana" como campo — ele é sempre derivado da data
 string.
 
 - **Imposto por**: `src/lib/domain/weekday.ts` (parsing local, sem `new
-  Date(isoString)` direto — evita bug de fuso horário) e
-  `extract(dow from cs.class_date) = 2` em `trilho_generate_ctl_calendar`.
+  Date(isoString)` direto — evita bug de fuso horário).
 - **Testado por**: `tests/unit/weekday.test.ts`.
 
 ### BR-004 — Todo módulo tem exatamente 2 aulas, criadas juntas
@@ -73,19 +72,23 @@ código manualmente.
 - **Testado por**: `tests/unit/lesson-code.test.ts` (TESTE 1-4 da
   especificação original).
 
-### BR-007 — CTL só é gerado a partir de terças com aula de Maturidade
+### BR-007 — Maturidade e CTL têm calendários de aula independentes
 
-O calendário de uma turma de CTL é gerado automaticamente pareando, em
-ordem, as terças-feiras com aula de Maturidade na turma de origem
-(`cohorts.next_ctl_cohort_id` aponta da turma de Maturidade para a turma de
-CTL) com os `lesson_templates` do curso CTL, em ordem de módulo/aula.
+Não existe geração automática de aulas de CTL a partir do Maturidade (nem de
+nenhum outro curso a partir de outro). Toda turma — de Maturidade, de CTL,
+ou de qualquer curso futuro — tem seu calendário de aulas agendado
+manualmente pelo admin, uma a uma, do mesmo jeito
+(`trilho_create_class_session`). `cohorts.next_ctl_cohort_id` continua
+existindo, mas serve **só** para a promoção automática (BR-009) — não tem
+mais nenhum efeito sobre agendamento de aula.
 
-- **Imposto por**: `trilho_generate_ctl_calendar()`
-  (`supabase/migrations/20260809100300_trilho_v2_functions.sql`) — usa
-  `row_number()` para parear deterministicamente, e é idempotente
-  (`already_exists`) tanto na prévia (`p_commit = false`) quanto ao
-  confirmar (`p_commit = true`).
-- **Testado por**: `tests/integration/critical-rules.test.ts` (TESTE 13-14).
+- **Imposto por**: não existe mais `trilho_generate_ctl_calendar()` — a
+  função foi removida em
+  `supabase/migrations/20260809100700_trilho_v2_decouple_ctl_calendar.sql`.
+  `trilho_create_class_session()` não faz nenhuma checagem cruzada entre
+  cursos.
+- **Testado por**: `tests/integration/critical-rules.test.ts` (TESTE 4,
+  criação de aula genérica, igual para qualquer curso/turma).
 
 ### BR-008 — Código e posição da aula são únicos dentro do curso
 

@@ -5,12 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/current-user';
 import { friendlyRpcError } from '@/lib/errors';
 import { createCohortSchema, updateCohortSchema, type CreateCohortInput, type UpdateCohortInput } from '@/validations/cohort';
-import type {
-  CohortsRow,
-  CoursesRow,
-  FinalizeCohortResult,
-  GenerateCtlCalendarResult,
-} from '@/types/database';
+import type { CohortsRow, CoursesRow, FinalizeCohortResult } from '@/types/database';
 
 export interface ActionResult {
   success: boolean;
@@ -216,34 +211,6 @@ export async function setPublicAttendanceEnabledAction(
   if (error) return { success: false, message: friendlyRpcError(error.message) };
   revalidatePath(`/turmas/${cohortId}`);
   return { success: true, message: enabled ? 'Link de presença ativado.' : 'Link de presença desativado.' };
-}
-
-export async function generateCtlCalendarPreviewAction(
-  ctlCohortId: string,
-): Promise<{ success: boolean; message: string; preview: GenerateCtlCalendarResult[] }> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('trilho_generate_ctl_calendar', {
-    p_ctl_cohort_id: ctlCohortId,
-    p_commit: false,
-  });
-  if (error) return { success: false, message: friendlyRpcError(error.message), preview: [] };
-  return { success: true, message: '', preview: data ?? [] };
-}
-
-export async function commitCtlCalendarAction(
-  ctlCohortId: string,
-): Promise<ActionResult & { created?: number }> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('trilho_generate_ctl_calendar', {
-    p_ctl_cohort_id: ctlCohortId,
-    p_commit: true,
-  });
-  if (error) return { success: false, message: friendlyRpcError(error.message) };
-  const created = (data ?? []).filter((row) => !row.already_exists).length;
-  revalidatePath(`/turmas/${ctlCohortId}`);
-  return { success: true, message: `${created} aula(s) de CTL criada(s).`, created };
 }
 
 export async function finalizeCohortAction(

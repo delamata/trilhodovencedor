@@ -241,15 +241,6 @@ export type AddModuleResult = {
 
 export type RegeneratePublicTokenResult = { token: string };
 
-export type GenerateCtlCalendarResult = {
-  class_date: string;
-  start_time: string;
-  end_time: string;
-  lesson_code: string;
-  lesson_title: string;
-  already_exists: boolean;
-};
-
 export type CloseClassSessionResult = { marked_present: number; marked_absent: number };
 
 export type FinalizeCohortResult = {
@@ -551,10 +542,6 @@ export interface Database {
       trilho_cancel_class_session: {
         Args: { p_class_session_id: string; p_reason?: string | null };
         Returns: undefined;
-      };
-      trilho_generate_ctl_calendar: {
-        Args: { p_ctl_cohort_id: string; p_commit?: boolean };
-        Returns: GenerateCtlCalendarResult[];
       };
       trilho_open_class_session: { Args: { p_class_session_id: string }; Returns: undefined };
       trilho_close_class_session: {

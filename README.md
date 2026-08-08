@@ -14,10 +14,10 @@ de presença dos cursos do Trilho do Vencedor — **Maturidade** e **CTL**.
 - Professores (vinculados a uma ou mais turmas) abrem/fecham a chamada de
   cada aula e corrigem presença manualmente quando preciso.
 - Administradores criam turmas, definem a estrutura de módulos/aulas de cada
-  curso, geram automaticamente o calendário do CTL a partir das terças do
-  Maturidade, registram desistência, finalizam turmas (aprovação automática
-  por limite de faltas + promoção para o CTL) e acompanham tudo em
-  dashboards e relatórios.
+  curso e agendam o calendário de cada turma manualmente — Maturidade e CTL
+  têm calendários totalmente independentes. Também registram desistência,
+  finalizam turmas (aprovação automática por limite de faltas + promoção
+  para o CTL) e acompanham tudo em dashboards e relatórios.
 
 ## Sumário
 
@@ -69,7 +69,7 @@ ESLint · Prettier · exceljs (exportação XLSX) · qrcode.react.
 ## Regras de negócio
 
 As 15 regras críticas do sistema (BR-001 a BR-015) — matrícula única ativa,
-geração de código de aula, geração do calendário do CTL, promoção
+geração de código de aula, calendários independentes por turma, promoção
 automática, fila de elegíveis, desistência, check-in sem login e seu
 tratamento de erro genérico — estão documentadas com onde são impostas e
 onde são testadas em [`docs/business-rules.md`](docs/business-rules.md).
@@ -176,6 +176,7 @@ supabase/migrations/20260809100300_trilho_v2_functions.sql
 supabase/migrations/20260809100400_trilho_v2_rls.sql
 supabase/migrations/20260809100500_trilho_v2_views.sql
 supabase/migrations/20260809100600_trilho_v2_fix_members_policy.sql
+supabase/migrations/20260809100700_trilho_v2_decouple_ctl_calendar.sql
 ```
 
 As migrations `20260807*`/`20260808*` criam o schema v1 (curso-cêntrico); as
@@ -238,9 +239,9 @@ Roda `supabase/seed/run.ts`.
    dada em qual data/horário — o dia da semana aparece calculado
    automaticamente.
 3. **CTL**: numa turma de Maturidade, defina "Turma de CTL" (próxima turma
-   para onde os aprovados são promovidos). Na turma de CTL correspondente,
-   use "Gerar calendário a partir do Maturidade" — ele pareia as terças com
-   aula de Maturidade com as aulas do CTL, com prévia antes de confirmar.
+   para onde os aprovados são promovidos automaticamente ao finalizar). O
+   calendário de aulas da turma de CTL é independente do Maturidade — agende
+   as aulas dela do mesmo jeito do passo 2.
 4. **Chamada**: na tela da aula (`/aulas/[id]`), "Abrir chamada" libera o
    check-in público para aquela turma; "Encerrar chamada" marca falta
    automática (`FALTA`, origem `SYSTEM`) para quem não confirmou.
@@ -291,12 +292,11 @@ npm run test:e2e       # Playwright — login, proteção de rotas, check-in pú
 npm run test:integration
 ```
 
-18 cenários (TESTE 1-18) cobrindo matrícula, chamada única aberta por turma,
-falta automática ao encerrar chamada, desistência, geração idempotente do
-calendário de CTL e o fluxo completo de check-in público — chamando as
-**funções reais do banco** (`trilho_*`), com aluno e admin de teste
-autenticados de verdade e um client `anon` real para o check-in público —
-não são mocks.
+16 cenários (TESTE 1-16) cobrindo matrícula, chamada única aberta por turma,
+falta automática ao encerrar chamada, desistência e o fluxo completo de
+check-in público — chamando as **funções reais do banco** (`trilho_*`), com
+aluno e admin de teste autenticados de verdade e um client `anon` real para
+o check-in público — não são mocks.
 
 > ⚠️ Só rodam se `.env.local` tiver credenciais reais do Supabase (com as
 > migrations v2 já aplicadas e `npm run seed` já rodado ao menos uma vez,

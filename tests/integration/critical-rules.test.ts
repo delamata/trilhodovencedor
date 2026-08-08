@@ -290,62 +290,7 @@ describe.skipIf(!hasCredentials)('Regras críticas (banco real)', () => {
     expect(error?.message).toBe('ALUNO_SEM_MATRICULA_NA_TURMA');
   });
 
-  it('TESTE 13 — pré-visualização do calendário de CTL (p_commit=false) não grava nada', async () => {
-    await admin.from('cohorts').update({ next_ctl_cohort_id: ctlCohortId }).eq('id', matCohortId);
-
-    const { data, error } = await adminUser.client.rpc('trilho_generate_ctl_calendar', {
-      p_ctl_cohort_id: ctlCohortId,
-      p_commit: false,
-    });
-    expect(error).toBeNull();
-
-    const { count } = await admin
-      .from('class_sessions')
-      .select('id', { count: 'exact', head: true })
-      .eq('cohort_id', ctlCohortId);
-    expect(count ?? 0).toBe(0);
-    // Sem terça-feira com aula de Maturidade nos fixtures deste teste,
-    // o preview pode vir vazio — o que importa é não ter gravado nada.
-    expect(Array.isArray(data)).toBe(true);
-  });
-
-  it('TESTE 14 — gerar calendário de CTL (p_commit=true) é idempotente', async () => {
-    // Cria uma aula de Maturidade numa terça-feira conhecida.
-    const { data: tuesdaySessionId } = await adminUser.client.rpc('trilho_create_class_session', {
-      p_cohort_id: matCohortId,
-      p_lesson_template_id: maturidadeLessonId,
-      p_class_date: '2026-08-11', // terça-feira
-      p_start_time: '20:00',
-      p_end_time: '21:30',
-    });
-    fixtures.classSessionIds.push(tuesdaySessionId as string);
-
-    const first = await adminUser.client.rpc('trilho_generate_ctl_calendar', {
-      p_ctl_cohort_id: ctlCohortId,
-      p_commit: true,
-    });
-    expect(first.error).toBeNull();
-    const createdIds = (
-      await admin.from('class_sessions').select('id').eq('cohort_id', ctlCohortId)
-    ).data?.map((r) => r.id) ?? [];
-    fixtures.classSessionIds.push(...createdIds);
-    expect(createdIds.length).toBeGreaterThanOrEqual(1);
-
-    const second = await adminUser.client.rpc('trilho_generate_ctl_calendar', {
-      p_ctl_cohort_id: ctlCohortId,
-      p_commit: true,
-    });
-    expect(second.error).toBeNull();
-    expect(second.data?.every((row) => row.already_exists)).toBe(true);
-
-    const { count } = await admin
-      .from('class_sessions')
-      .select('id', { count: 'exact', head: true })
-      .eq('cohort_id', ctlCohortId);
-    expect(count).toBe(createdIds.length);
-  });
-
-  it('TESTE 15 — check-in público com token inválido é NEGADO (LINK_INVALIDO)', async () => {
+  it('TESTE 13 — check-in público com token inválido é NEGADO (LINK_INVALIDO)', async () => {
     const { error } = await anon.rpc('trilho_public_get_status', {
       p_cohort_code: matCohortCode,
       p_token: 'token-errado',
@@ -353,7 +298,7 @@ describe.skipIf(!hasCredentials)('Regras críticas (banco real)', () => {
     expect(error?.message).toBe('LINK_INVALIDO');
   });
 
-  it('TESTE 16 — busca pública exige pelo menos 3 letras (NOME_MUITO_CURTO)', async () => {
+  it('TESTE 14 — busca pública exige pelo menos 3 letras (NOME_MUITO_CURTO)', async () => {
     const { error } = await anon.rpc('trilho_public_search_students', {
       p_cohort_code: matCohortCode,
       p_token: publicToken,
@@ -362,7 +307,7 @@ describe.skipIf(!hasCredentials)('Regras críticas (banco real)', () => {
     expect(error?.message).toBe('NOME_MUITO_CURTO');
   });
 
-  it('TESTE 17 — check-in público com sufixo de telefone errado é NEGADO com erro genérico', async () => {
+  it('TESTE 15 — check-in público com sufixo de telefone errado é NEGADO com erro genérico', async () => {
     // Reabre uma chamada pra ter algo pra confirmar.
     const sessionId = fixtures.classSessionIds[1]!;
     await adminUser.client.rpc('trilho_open_class_session', { p_class_session_id: sessionId });
@@ -385,7 +330,7 @@ describe.skipIf(!hasCredentials)('Regras críticas (banco real)', () => {
     expect(error?.message).toBe('NAO_FOI_POSSIVEL_VALIDAR');
   });
 
-  it('TESTE 18 — check-in público com dados corretos registra presença uma única vez', async () => {
+  it('TESTE 16 — check-in público com dados corretos registra presença uma única vez', async () => {
     const sessionId = fixtures.classSessionIds[1]!;
     const { data: activeMember } = await admin
       .from('members')
