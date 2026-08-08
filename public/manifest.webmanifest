@@ -1,0 +1,19 @@
+{
+  "name": "Controle de Presença — Trilho do Vencedor",
+  "short_name": "Trilho do Vencedor",
+  "description": "Gestão de alunos, cursos, calendário de aulas e controle de presença.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#1b2344",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

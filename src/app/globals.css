@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Trilho do Vencedor — paleta navy/azul, fundo cinza muito claro,
+     cards brancos, bordas discretas. Mesmo navy (#1B2344) usado no app
+     Oikos, por continuidade visual. */
+  --background: #f6f7fb;
+  --foreground: #1a1f36;
+  --card: #ffffff;
+  --card-foreground: #1a1f36;
+  --popover: #ffffff;
+  --popover-foreground: #1a1f36;
+  --primary: #1b2344;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f8;
+  --secondary-foreground: #1b2344;
+  --muted: #f1f3f8;
+  --muted-foreground: #667085;
+  --accent: #e8ecf7;
+  --accent-foreground: #1b2344;
+  --destructive: #dc2626;
+  --border: #e4e7ee;
+  --input: #e4e7ee;
+  --ring: #3b5fdd;
+  --chart-1: #149c88;
+  --chart-2: #3b5fdd;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #94a3b8;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1f36;
+  --sidebar-primary: #1b2344;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1f8;
+  --sidebar-accent-foreground: #1b2344;
+  --sidebar-border: #e4e7ee;
+  --sidebar-ring: #3b5fdd;
+}
+
+.dark {
+  --background: #0f1424;
+  --foreground: #e7e9f2;
+  --card: #171d33;
+  --card-foreground: #e7e9f2;
+  --popover: #171d33;
+  --popover-foreground: #e7e9f2;
+  --primary: #6b84e8;
+  --primary-foreground: #0f1424;
+  --secondary: #232a47;
+  --secondary-foreground: #e7e9f2;
+  --muted: #1c2340;
+  --muted-foreground: #9aa3c0;
+  --accent: #232a47;
+  --accent-foreground: #e7e9f2;
+  --destructive: #f87171;
+  --border: #2a3155;
+  --input: #2a3155;
+  --ring: #6b84e8;
+  --chart-1: #34d3b8;
+  --chart-2: #6b84e8;
+  --chart-3: #fbbf24;
+  --chart-4: #f87171;
+  --chart-5: #94a3b8;
+  --sidebar: #171d33;
+  --sidebar-foreground: #e7e9f2;
+  --sidebar-primary: #6b84e8;
+  --sidebar-primary-foreground: #0f1424;
+  --sidebar-accent: #232a47;
+  --sidebar-accent-foreground: #e7e9f2;
+  --sidebar-border: #2a3155;
+  --sidebar-ring: #6b84e8;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
