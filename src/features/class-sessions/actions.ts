@@ -8,8 +8,10 @@ import { mergeRosterWithAttendance, type RosterEntry } from '@/lib/domain/roster
 import {
   cancelClassSessionSchema,
   createClassSessionSchema,
+  updateClassSessionSchema,
   type CancelClassSessionInput,
   type CreateClassSessionInput,
+  type UpdateClassSessionInput,
 } from '@/validations/class';
 import type { AttendanceStatus, ClassSessionStatus } from '@/types/database';
 
@@ -25,6 +27,7 @@ export interface ClassSessionListItem {
   courseId: string;
   courseCode: string;
   courseName: string;
+  lessonTemplateId: string;
   lessonCode: string;
   lessonTitle: string;
   classDate: string;
@@ -36,6 +39,7 @@ export interface ClassSessionListItem {
 function mapSessionRow(row: {
   id: string;
   cohort_id: string;
+  lesson_template_id: string;
   class_date: string;
   start_time: string;
   end_time: string;
@@ -43,9 +47,15 @@ function mapSessionRow(row: {
   lesson_templates: unknown;
   cohorts: unknown;
 }): ClassSessionListItem {
-  const lesson = Array.isArray(row.lesson_templates) ? row.lesson_templates[0] : row.lesson_templates;
+  const lesson = Array.isArray(row.lesson_templates)
+    ? row.lesson_templates[0]
+    : row.lesson_templates;
   const cohort = Array.isArray(row.cohorts) ? row.cohorts[0] : row.cohorts;
-  const course = cohort?.courses ? (Array.isArray(cohort.courses) ? cohort.courses[0] : cohort.courses) : null;
+  const course = cohort?.courses
+    ? Array.isArray(cohort.courses)
+      ? cohort.courses[0]
+      : cohort.courses
+    : null;
 
   return {
     id: row.id,
@@ -54,6 +64,7 @@ function mapSessionRow(row: {
     courseId: course?.id ?? '',
     courseCode: course?.code ?? '—',
     courseName: course?.name ?? '—',
+    lessonTemplateId: row.lesson_template_id,
     lessonCode: lesson?.lesson_code ?? '—',
     lessonTitle: lesson?.title ?? '—',
     classDate: row.class_date,
@@ -63,11 +74,15 @@ function mapSessionRow(row: {
   };
 }
 
-export async function listClassSessionsForCohortAction(cohortId: string): Promise<ClassSessionListItem[]> {
+export async function listClassSessionsForCohortAction(
+  cohortId: string,
+): Promise<ClassSessionListItem[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from('class_sessions')
-    .select('id, cohort_id, class_date, start_time, end_time, status, lesson_templates(lesson_code, title), cohorts(name, courses(id, code, name))')
+    .select(
+      'id, cohort_id, lesson_template_id, class_date, start_time, end_time, status, lesson_templates(lesson_code, title), cohorts(name, courses(id, code, name))',
+    )
     .eq('cohort_id', cohortId)
     .order('class_date')
     .order('start_time');
@@ -83,7 +98,9 @@ export async function listUpcomingClassSessionsForTeacherAction(
   const supabase = await createClient();
   const { data } = await supabase
     .from('class_sessions')
-    .select('id, cohort_id, class_date, start_time, end_time, status, lesson_templates(lesson_code, title), cohorts(name, courses(id, code, name))')
+    .select(
+      'id, cohort_id, lesson_template_id, class_date, start_time, end_time, status, lesson_templates(lesson_code, title), cohorts(name, courses(id, code, name))',
+    )
     .in('cohort_id', cohortIds)
     .neq('status', 'CANCELLED')
     .order('class_date')
@@ -98,13 +115,15 @@ export interface ClassSessionDetail extends ClassSessionListItem {
   roster: RosterEntry[];
 }
 
-export async function getClassSessionDetailAction(classSessionId: string): Promise<ClassSessionDetail | null> {
+export async function getClassSessionDetailAction(
+  classSessionId: string,
+): Promise<ClassSessionDetail | null> {
   const supabase = await createClient();
 
   const { data: sessionRow } = await supabase
     .from('class_sessions')
     .select(
-      'id, cohort_id, class_date, start_time, end_time, status, notes, lesson_templates(lesson_code, title), cohorts(name, courses(id, code, name, max_absences))',
+      'id, cohort_id, lesson_template_id, class_date, start_time, end_time, status, notes, lesson_templates(lesson_code, title), cohorts(name, courses(id, code, name, max_absences))',
     )
     .eq('id', classSessionId)
     .maybeSingle();
@@ -113,7 +132,11 @@ export async function getClassSessionDetailAction(classSessionId: string): Promi
 
   const base = mapSessionRow(sessionRow);
   const cohort = Array.isArray(sessionRow.cohorts) ? sessionRow.cohorts[0] : sessionRow.cohorts;
-  const course = cohort?.courses ? (Array.isArray(cohort.courses) ? cohort.courses[0] : cohort.courses) : null;
+  const course = cohort?.courses
+    ? Array.isArray(cohort.courses)
+      ? cohort.courses[0]
+      : cohort.courses
+    : null;
 
   const [{ data: enrollments }, { data: attendanceRows }] = await Promise.all([
     supabase
@@ -149,7 +172,9 @@ export async function getClassSessionDetailAction(classSessionId: string): Promi
   };
 }
 
-export async function createClassSessionAction(input: CreateClassSessionInput): Promise<ActionResult> {
+export async function createClassSessionAction(
+  input: CreateClassSessionInput,
+): Promise<ActionResult> {
   const parsed = createClassSessionSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, message: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
@@ -171,7 +196,9 @@ export async function createClassSessionAction(input: CreateClassSessionInput): 
   return { success: true, message: 'Aula criada com sucesso.' };
 }
 
-export async function cancelClassSessionAction(input: CancelClassSessionInput): Promise<ActionResult> {
+export async function cancelClassSessionAction(
+  input: CancelClassSessionInput,
+): Promise<ActionResult> {
   const parsed = cancelClassSessionSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, message: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
@@ -190,10 +217,48 @@ export async function cancelClassSessionAction(input: CancelClassSessionInput): 
   return { success: true, message: 'Aula cancelada.' };
 }
 
+export async function updateClassSessionAction(
+  input: UpdateClassSessionInput,
+): Promise<ActionResult> {
+  const parsed = updateClassSessionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('trilho_update_class_session', {
+    p_class_session_id: parsed.data.classSessionId,
+    p_lesson_template_id: parsed.data.lessonTemplateId,
+    p_class_date: parsed.data.date,
+    p_start_time: parsed.data.startTime,
+    p_end_time: parsed.data.endTime,
+    p_notes: parsed.data.notes || null,
+  });
+
+  if (error) return { success: false, message: friendlyRpcError(error.message) };
+
+  revalidatePath(`/aulas/${parsed.data.classSessionId}`);
+  return { success: true, message: 'Aula atualizada.' };
+}
+
+export async function deleteClassSessionAction(classSessionId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('trilho_delete_class_session', {
+    p_class_session_id: classSessionId,
+  });
+
+  if (error) return { success: false, message: friendlyRpcError(error.message) };
+
+  revalidatePath('/turmas');
+  return { success: true, message: 'Aula excluída.' };
+}
+
 export async function openClassSessionAction(classSessionId: string): Promise<ActionResult> {
   await requireUser();
   const supabase = await createClient();
-  const { error } = await supabase.rpc('trilho_open_class_session', { p_class_session_id: classSessionId });
+  const { error } = await supabase.rpc('trilho_open_class_session', {
+    p_class_session_id: classSessionId,
+  });
   if (error) return { success: false, message: friendlyRpcError(error.message) };
   revalidatePath(`/aulas/${classSessionId}`);
   return { success: true, message: 'Chamada aberta.' };

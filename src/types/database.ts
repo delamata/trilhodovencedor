@@ -19,7 +19,8 @@ export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'DROPPED_OUT' | 'CANCELL
 export type AcademicResult = 'PENDING' | 'APPROVED' | 'NOT_APPROVED';
 export type ClassSessionStatus = 'SCHEDULED' | 'ATTENDANCE_OPEN' | 'COMPLETED' | 'CANCELLED';
 export type AttendanceStatus = 'PRESENTE' | 'FALTA' | 'FALTA_JUSTIFICADA' | 'ATRASO';
-export type AttendanceSource = 'STUDENT_CHECKIN' | 'PUBLIC_CHECKIN' | 'TEACHER' | 'ADMIN' | 'SYSTEM';
+export type AttendanceSource =
+  'STUDENT_CHECKIN' | 'PUBLIC_CHECKIN' | 'TEACHER' | 'ADMIN' | 'SYSTEM';
 
 // Tabelas do app Oikos que reaproveitamos (somente leitura pelo Trilho;
 // nunca alteradas por este projeto).
@@ -543,6 +544,18 @@ export interface Database {
         Args: { p_class_session_id: string; p_reason?: string | null };
         Returns: undefined;
       };
+      trilho_update_class_session: {
+        Args: {
+          p_class_session_id: string;
+          p_lesson_template_id: string;
+          p_class_date: string;
+          p_start_time: string;
+          p_end_time: string;
+          p_notes?: string | null;
+        };
+        Returns: undefined;
+      };
+      trilho_delete_class_session: { Args: { p_class_session_id: string }; Returns: undefined };
       trilho_open_class_session: { Args: { p_class_session_id: string }; Returns: undefined };
       trilho_close_class_session: {
         Args: { p_class_session_id: string };
@@ -557,8 +570,14 @@ export interface Database {
         };
         Returns: string;
       };
-      trilho_enroll_student: { Args: { p_student_id: string; p_cohort_id: string }; Returns: string };
-      trilho_end_enrollment: { Args: { p_enrollment_id: string; p_status: 'CANCELLED' }; Returns: undefined };
+      trilho_enroll_student: {
+        Args: { p_student_id: string; p_cohort_id: string };
+        Returns: string;
+      };
+      trilho_end_enrollment: {
+        Args: { p_enrollment_id: string; p_status: 'CANCELLED' };
+        Returns: undefined;
+      };
       trilho_mark_dropout: {
         Args: {
           p_enrollment_id: string;
@@ -579,7 +598,12 @@ export interface Database {
         Returns: PublicGetStatusResult[];
       };
       trilho_public_search_students: {
-        Args: { p_cohort_code: string; p_token: string; p_name_query: string; p_ip?: string | null };
+        Args: {
+          p_cohort_code: string;
+          p_token: string;
+          p_name_query: string;
+          p_ip?: string | null;
+        };
         Returns: PublicSearchStudentsResult[];
       };
       trilho_public_checkin: {

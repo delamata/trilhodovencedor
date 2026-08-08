@@ -5,15 +5,37 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
-import type { ClassSessionStatus } from '@/types/database';
-import { cancelClassSessionAction, closeClassSessionAction, openClassSessionAction } from './actions';
+import type { ClassSessionStatus, LessonTemplatesRow } from '@/types/database';
+import {
+  cancelClassSessionAction,
+  closeClassSessionAction,
+  openClassSessionAction,
+} from './actions';
+import { EditClassSessionDialog } from './edit-class-session-dialog';
+import { DeleteClassSessionButton } from './delete-class-session-button';
 
 export function ClassSessionActionsBar({
   classSessionId,
+  cohortId,
   status,
+  lessonOptions,
+  lessonTemplateId,
+  classDate,
+  startTime,
+  endTime,
+  notes,
+  lessonLabel,
 }: {
   classSessionId: string;
+  cohortId: string;
   status: ClassSessionStatus;
+  lessonOptions: LessonTemplatesRow[];
+  lessonTemplateId: string;
+  classDate: string;
+  startTime: string;
+  endTime: string;
+  notes: string | null;
+  lessonLabel: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -70,6 +92,15 @@ export function ClassSessionActionsBar({
           <Button size="sm" disabled={busy} onClick={handleOpen}>
             Abrir chamada
           </Button>
+          <EditClassSessionDialog
+            classSessionId={classSessionId}
+            lessonOptions={lessonOptions}
+            initialLessonTemplateId={lessonTemplateId}
+            initialDate={classDate}
+            initialStartTime={startTime}
+            initialEndTime={endTime}
+            initialNotes={notes}
+          />
           <ConfirmDialog
             trigger={
               <Button size="sm" variant="outline" disabled={busy}>
@@ -83,6 +114,14 @@ export function ClassSessionActionsBar({
             onConfirm={handleCancel}
           />
         </>
+      ) : null}
+
+      {status === 'SCHEDULED' || status === 'CANCELLED' ? (
+        <DeleteClassSessionButton
+          classSessionId={classSessionId}
+          cohortId={cohortId}
+          lessonLabel={lessonLabel}
+        />
       ) : null}
 
       {status === 'ATTENDANCE_OPEN' ? (

@@ -25,3 +25,19 @@ export const cancelClassSessionSchema = z.object({
 });
 
 export type CancelClassSessionInput = z.infer<typeof cancelClassSessionSchema>;
+
+export const updateClassSessionSchema = z
+  .object({
+    classSessionId: z.string().uuid(),
+    lessonTemplateId: z.string().uuid('Selecione a aula.'),
+    date: dateSchema,
+    startTime: timeSchema,
+    endTime: timeSchema,
+    notes: z.string().trim().optional(),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: 'O horário final deve ser depois do horário inicial.',
+    path: ['endTime'],
+  });
+
+export type UpdateClassSessionInput = z.infer<typeof updateClassSessionSchema>;

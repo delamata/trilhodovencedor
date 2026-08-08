@@ -16,6 +16,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   AULA_NAO_ENCONTRADA: 'Aula não encontrada.',
   AULA_CANCELADA: 'Esta aula foi cancelada.',
   AULA_JA_FINALIZADA: 'Esta aula já foi finalizada.',
+  AULA_NAO_PODE_SER_EDITADA: 'Só é possível editar aulas que ainda não tiveram chamada aberta.',
+  AULA_NAO_PODE_SER_EXCLUIDA:
+    'Só é possível excluir aulas agendadas ou canceladas (sem presença lançada).',
   ENCERRE_A_CHAMADA_ANTES_DE_CANCELAR: 'Encerre a chamada desta aula antes de cancelá-la.',
   CHAMADA_JA_ABERTA: 'Já existe uma chamada aberta para esta aula.',
   CHAMADA_NAO_ABERTA: 'Não há chamada aberta para esta aula.',

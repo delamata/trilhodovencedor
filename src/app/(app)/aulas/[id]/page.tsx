@@ -9,6 +9,7 @@ import { formatWeekday } from '@/lib/domain/weekday';
 import { getClassSessionDetailAction } from '@/features/class-sessions/actions';
 import { ClassSessionActionsBar } from '@/features/class-sessions/class-session-actions-bar';
 import { AttendanceRosterTable } from '@/features/class-sessions/attendance-roster-table';
+import { listCourseStructureAction } from '@/features/courses/actions';
 
 export const metadata: Metadata = { title: 'Aula — Trilho do Vencedor' };
 
@@ -29,6 +30,9 @@ export default async function ClassSessionDetailPage({
   const canManage = user.isAdmin || user.teacherCohortIds.includes(session.cohortId);
   if (!canManage) redirect('/dashboard');
 
+  const modules = await listCourseStructureAction(session.courseId);
+  const lessonOptions = modules.flatMap((m) => m.lessons);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -46,7 +50,18 @@ export default async function ClassSessionDetailPage({
         actions={<ClassStatusBadge status={session.status} />}
       />
 
-      <ClassSessionActionsBar classSessionId={session.id} status={session.status} />
+      <ClassSessionActionsBar
+        classSessionId={session.id}
+        cohortId={session.cohortId}
+        status={session.status}
+        lessonOptions={lessonOptions}
+        lessonTemplateId={session.lessonTemplateId}
+        classDate={session.classDate}
+        startTime={session.startTime}
+        endTime={session.endTime}
+        notes={session.notes}
+        lessonLabel={`${session.lessonCode} — ${session.lessonTitle}`}
+      />
 
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-foreground">Presença</h2>

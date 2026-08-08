@@ -63,7 +63,9 @@ export function AttendanceRosterTable({
                 {editable ? (
                   <Select
                     value={row.status === 'PENDENTE' ? undefined : row.status}
-                    onValueChange={(value) => value && handleChange(row.studentId, value as AttendanceStatus)}
+                    onValueChange={(value) =>
+                      value && handleChange(row.studentId, value as AttendanceStatus)
+                    }
                     disabled={pending === row.studentId}
                   >
                     <SelectTrigger className="w-44">
