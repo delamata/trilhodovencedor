@@ -186,6 +186,9 @@ supabase/migrations/20260809100800_trilho_v2_delete_cohort.sql
 supabase/migrations/20260809100900_trilho_v2_edit_delete_class_session.sql
 supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql
 supabase/migrations/20260810100000_trilho_v2_module_teachers.sql
+supabase/migrations/20260810110000_trilho_v2_module_dates.sql
+supabase/migrations/20260810120000_trilho_v2_teacher_no_celula.sql
+supabase/migrations/20260810130000_trilho_v2_fix_ambiguous_column.sql
 ```
 
 As migrations `20260807*`/`20260808*` criam o schema v1 (curso-cêntrico); as
