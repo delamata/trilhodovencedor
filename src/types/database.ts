@@ -692,9 +692,8 @@ export interface Database {
         Args: { p_name_query: string; p_ip?: string | null };
         Returns: PublicSearchMembersResult[];
       };
-      trilho_public_list_celulas: { Args: Record<string, never>; Returns: { celula: string }[] };
       trilho_public_create_member: {
-        Args: { p_nome: string; p_tel: string; p_celula: string; p_ip?: string | null };
+        Args: { p_nome: string; p_tel: string; p_ip?: string | null };
         Returns: PublicCreateMemberResult[];
       };
       trilho_public_list_teachable_modules: {

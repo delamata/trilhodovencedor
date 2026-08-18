@@ -6,13 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { formatDate } from '@/lib/format';
 import type {
   PublicRegisterTeacherModulesResult,
@@ -21,7 +14,6 @@ import type {
 } from '@/types/database';
 import {
   createPublicMemberAction,
-  listPublicCelulasAction,
   searchPublicMembersAction,
   submitModuleRegistrationAction,
 } from './actions';
@@ -64,8 +56,6 @@ export function PublicTeacherRegistrationFlow({
   // cadastro novo
   const [novoNome, setNovoNome] = useState('');
   const [novoTel, setNovoTel] = useState('');
-  const [novoCelula, setNovoCelula] = useState('');
-  const [celulaOptions, setCelulaOptions] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -96,12 +86,6 @@ export function PublicTeacherRegistrationFlow({
     return () => clearTimeout(timeout);
   }, [trimmedQuery]);
 
-  useEffect(() => {
-    if (mode === 'new' && celulaOptions.length === 0) {
-      listPublicCelulasAction().then(setCelulaOptions);
-    }
-  }, [mode, celulaOptions.length]);
-
   function selectExisting(member: PublicSearchMembersResult) {
     setTeacher({ memberId: member.member_id, displayName: member.display_name, phoneSuffix: null });
     setPhoneSuffix('');
@@ -113,7 +97,7 @@ export function PublicTeacherRegistrationFlow({
     setCreating(true);
     setCreateError(null);
     try {
-      const res = await createPublicMemberAction(novoNome, novoTel, novoCelula);
+      const res = await createPublicMemberAction(novoNome, novoTel);
       if (res.success && res.member) {
         const digits = novoTel.replace(/\D/g, '');
         setTeacher({
@@ -429,25 +413,10 @@ export function PublicTeacherRegistrationFlow({
               placeholder="11999998888"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="novo-celula">Célula</Label>
-            <Select value={novoCelula} onValueChange={(v) => setNovoCelula(v ?? '')}>
-              <SelectTrigger id="novo-celula">
-                <SelectValue placeholder="Selecione a célula" />
-              </SelectTrigger>
-              <SelectContent>
-                {celulaOptions.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           {createError ? <p className="text-sm text-destructive">{createError}</p> : null}
           <Button
             className="h-11 w-full"
-            disabled={!novoNome.trim() || !novoTel.trim() || !novoCelula || creating}
+            disabled={!novoNome.trim() || !novoTel.trim() || creating}
             onClick={handleCreateMember}
           >
             {creating ? 'Criando cadastro…' : 'Continuar'}

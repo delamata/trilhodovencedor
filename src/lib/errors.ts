@@ -33,7 +33,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   NOME_MUITO_CURTO: 'Digite pelo menos 3 letras do nome para buscar.',
   NENHUM_MODULO_SELECIONADO: 'Selecione pelo menos um módulo.',
   TELEFONE_INVALIDO: 'Informe um telefone válido (com DDD).',
-  CELULA_OBRIGATORIA: 'Selecione uma célula.',
   MUITAS_TENTATIVAS: 'Muitas tentativas em pouco tempo. Aguarde um instante e tente novamente.',
   NAO_FOI_POSSIVEL_VALIDAR:
     'Não foi possível confirmar seus dados. Confira o nome e os últimos 4 dígitos do telefone.',

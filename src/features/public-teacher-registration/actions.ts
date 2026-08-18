@@ -50,23 +50,20 @@ export async function searchPublicMembersAction(query: string): Promise<SearchMe
   return { success: true, message: '', members: data ?? [] };
 }
 
-export async function listPublicCelulasAction(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc('trilho_public_list_celulas');
-  return (data ?? []).map((row) => row.celula);
-}
-
 export interface CreateMemberResult {
   success: boolean;
   message: string;
   member: PublicCreateMemberResult | null;
 }
 
-/** Cadastra um professor que ainda não é membro conhecido do sistema. */
+/**
+ * Cadastra um professor que ainda não é membro conhecido do sistema.
+ * Não pede célula — só discipuladores pra cima se cadastram aqui, e
+ * quem cuida da célula de verdade desse membro é o cadastro no Oikos.
+ */
 export async function createPublicMemberAction(
   nome: string,
   tel: string,
-  celula: string,
 ): Promise<CreateMemberResult> {
   const supabase = await createClient();
   const ip = await clientIp();
@@ -74,7 +71,6 @@ export async function createPublicMemberAction(
   const { data, error } = await supabase.rpc('trilho_public_create_member', {
     p_nome: nome,
     p_tel: tel,
-    p_celula: celula,
     p_ip: ip,
   });
 

@@ -1,7 +1,7 @@
 # Regras de negócio — Trilho do Vencedor (v2)
 
 Este documento é a referência canônica das regras de negócio críticas do
-sistema, numeradas **BR-001 a BR-016**. Cada regra aponta para onde ela é
+sistema, numeradas **BR-001 a BR-017**. Cada regra aponta para onde ela é
 **imposta de verdade** (quase sempre no banco, dentro de uma função
 `SECURITY DEFINER` ou de uma constraint) e onde ela é **testada**.
 
@@ -198,8 +198,8 @@ matriculado na turma para alguém só com o link público.
 Assim como o check-in do aluno (BR-013), virar professor não exige login — o
 próprio professor se identifica em `/professores`, por nome (busca entre os
 membros ativos) + confirmação pelos últimos 4 dígitos do telefone, **ou**
-cria um cadastro de membro novo na hora (nome + telefone + célula) se ainda
-não existir. A unidade de escolha é o **módulo** de uma turma
+cria um cadastro de membro novo na hora (só nome + telefone — sem célula, ver
+BR-017) se ainda não existir. A unidade de escolha é o **módulo** de uma turma
 (`PLANNED`/`ACTIVE`), não a turma inteira — e um módulo, numa turma, só pode
 ter **um** professor: uma vez escolhido, ele desaparece da lista pros outros
 (soma-se a isso um índice único no banco, que é quem realmente garante a
@@ -214,9 +214,8 @@ regra, não só a UI).
   turma também grava em `teacher_cohorts` (acesso à turma inteira quando
   logado — BR-014 continua exigindo login pra isso).
 - **Cadastro de professor novo**: `trilho_public_create_member()` grava
-  direto em `members` (mesmas convenções do cadastro de aluno pelo admin:
-  `tipo='Adultos'`, `posicao='Visitante'`) — sempre um `member` de verdade,
-  nunca uma tabela de professor separada.
+  direto em `members` — sempre um `member` de verdade, nunca uma tabela de
+  professor separada. Ver BR-017 pra por que não pede célula.
 - **Note**: o cadastro em si não dá acesso a nada — pra abrir chamada ou ver
   a turma, o professor ainda precisa de login (fora do escopo deste
   cadastro), que continua exigindo autenticação normal (BR-014). O painel
@@ -225,6 +224,21 @@ regra, não só a UI).
   WhatsApp (link `wa.me`, sem nenhuma API/credencial do WhatsApp envolvida —
   só abre a conversa já com o texto pronto no WhatsApp de quem está logado).
 - **Testado por**: `tests/e2e/public-teacher-registration.spec.ts`.
+
+### BR-017 — Cadastro de professor novo não pede célula
+
+Só discipuladores pra cima se cadastram como professor — pedir célula ali é
+fricção desnecessária (quem cuida da célula de verdade de um membro é o
+cadastro no Oikos, não este fluxo). `members.celula` continua `NOT NULL`
+(coluna do Oikos, não é alterada por este projeto), então um professor novo
+é gravado com um valor fixo (`'Liderança'`, `posicao='Discipulador'`) só
+pra satisfazer a constraint — nunca pedido nem mostrado ao professor.
+
+- **Imposto por**: `trilho_public_create_member(p_nome, p_tel, p_ip)`
+  (`supabase/migrations/20260810120000_trilho_v2_teacher_no_celula.sql`) —
+  a versão anterior, com `p_celula` obrigatório, foi dropada.
+- **Testado por**: `tests/e2e/public-teacher-registration.spec.ts` (fluxo
+  "Sou novo" não tem campo de célula).
 
 ---
 

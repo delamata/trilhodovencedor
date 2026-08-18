@@ -24,4 +24,12 @@ test.describe('Cadastro de professor (sem login)', () => {
     await page.getByRole('link', { name: 'Cadastre-se aqui' }).click();
     await expect(page).toHaveURL(/\/professores/);
   });
+
+  test('fluxo "Sou novo" pede nome e telefone, mas nunca célula (BR-017)', async ({ page }) => {
+    await page.goto('/professores');
+    await page.getByRole('button', { name: 'Sou novo' }).click();
+    await expect(page.getByLabel('Nome completo')).toBeVisible();
+    await expect(page.getByLabel('Telefone (com DDD)')).toBeVisible();
+    await expect(page.getByText('Célula', { exact: true })).toHaveCount(0);
+  });
 });
