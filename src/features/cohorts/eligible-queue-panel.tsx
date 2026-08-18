@@ -114,7 +114,10 @@ export function EligibleQueuePanel({
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={handleEnroll} disabled={submitting || !targetCohortId || selected.size === 0}>
+        <Button
+          onClick={handleEnroll}
+          disabled={submitting || !targetCohortId || selected.size === 0}
+        >
           {submitting ? 'Matriculando…' : `Matricular ${selected.size} selecionado(s)`}
         </Button>
       </div>

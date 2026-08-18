@@ -31,10 +31,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   MATRICULA_NAO_ESTA_ATIVA: 'Esta matrícula não está ativa.',
   LINK_INVALIDO: 'Link de presença inválido ou desativado. Confira o link com a liderança.',
   NOME_MUITO_CURTO: 'Digite pelo menos 3 letras do nome para buscar.',
-  NENHUMA_TURMA_SELECIONADA: 'Selecione pelo menos uma turma.',
+  NENHUM_MODULO_SELECIONADO: 'Selecione pelo menos um módulo.',
+  TELEFONE_INVALIDO: 'Informe um telefone válido (com DDD).',
+  CELULA_OBRIGATORIA: 'Selecione uma célula.',
   MUITAS_TENTATIVAS: 'Muitas tentativas em pouco tempo. Aguarde um instante e tente novamente.',
   NAO_FOI_POSSIVEL_VALIDAR:
-    'Não foi possível confirmar sua presença com os dados informados. Confira o nome e os últimos 4 dígitos do telefone.',
+    'Não foi possível confirmar seus dados. Confira o nome e os últimos 4 dígitos do telefone.',
   PRESENCA_JA_REGISTRADA: 'Presença já registrada para esta aula.',
 };
 

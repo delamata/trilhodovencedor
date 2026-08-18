@@ -193,24 +193,37 @@ matriculado na turma para alguém só com o link público.
   telefone incorreto quanto para matrícula não ativa/desistente.
 - **Testado por**: `tests/integration/critical-rules.test.ts` (TESTE 15).
 
-### BR-016 — Professor se cadastra sem login, mas com a mesma identificação leve
+### BR-016 — Professor se cadastra sem login, por MÓDULO, e cada módulo tem só um professor
 
-Assim como o check-in do aluno (BR-013), virar professor de uma turma
-(`teacher_cohorts`) não exige login — o próprio professor se identifica em
-`/professores` por nome (busca entre os membros ativos) + confirmação pelos
-últimos 4 dígitos do telefone cadastrado, e escolhe em quais turmas
-(`PLANNED`/`ACTIVE`) vai lecionar. Nenhum cadastro de professor separado é
-criado — é sempre um vínculo com um `member` já existente.
+Assim como o check-in do aluno (BR-013), virar professor não exige login — o
+próprio professor se identifica em `/professores`, por nome (busca entre os
+membros ativos) + confirmação pelos últimos 4 dígitos do telefone, **ou**
+cria um cadastro de membro novo na hora (nome + telefone + célula) se ainda
+não existir. A unidade de escolha é o **módulo** de uma turma
+(`PLANNED`/`ACTIVE`), não a turma inteira — e um módulo, numa turma, só pode
+ter **um** professor: uma vez escolhido, ele desaparece da lista pros outros
+(soma-se a isso um índice único no banco, que é quem realmente garante a
+regra, não só a UI).
 
-- **Imposto por**: `trilho_public_register_teacher()`
-  (`supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql`)
-  — mesmo padrão de erro genérico (`NAO_FOI_POSSIVEL_VALIDAR`) e rate
-  limiting em `public_teacher_attempts` (tabela dedicada, separada de
-  `public_checkin_attempts`). Só grava `teacher_cohorts`; o role `anon` não
-  tem grant em nenhuma tabela, só nas 3 funções liberadas.
+- **Imposto por**: `module_teachers` tem `unique (cohort_id, module_number)`
+  (`supabase/migrations/20260810100000_trilho_v2_module_teachers.sql`).
+  `trilho_public_register_teacher_modules()` tenta o `insert` e captura
+  `unique_violation` por módulo — se outro professor pegou o módulo entre a
+  listagem e a confirmação, essa linha volta como `JA_OCUPADO` sem derrubar
+  as demais escolhidas na mesma leva. Escolher pelo menos um módulo de uma
+  turma também grava em `teacher_cohorts` (acesso à turma inteira quando
+  logado — BR-014 continua exigindo login pra isso).
+- **Cadastro de professor novo**: `trilho_public_create_member()` grava
+  direto em `members` (mesmas convenções do cadastro de aluno pelo admin:
+  `tipo='Adultos'`, `posicao='Visitante'`) — sempre um `member` de verdade,
+  nunca uma tabela de professor separada.
 - **Note**: o cadastro em si não dá acesso a nada — pra abrir chamada ou ver
   a turma, o professor ainda precisa de login (fora do escopo deste
-  cadastro), que continua exigindo autenticação normal (BR-014).
+  cadastro), que continua exigindo autenticação normal (BR-014). O painel
+  admin (`/turmas/[id]` → "Módulos e professores") mostra o resumo módulo →
+  professor de cada turma e tem um botão pra compartilhar esse resumo no
+  WhatsApp (link `wa.me`, sem nenhuma API/credencial do WhatsApp envolvida —
+  só abre a conversa já com o texto pronto no WhatsApp de quem está logado).
 - **Testado por**: `tests/e2e/public-teacher-registration.spec.ts`.
 
 ---

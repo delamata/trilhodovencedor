@@ -9,6 +9,7 @@ import {
   getCohortDetailAction,
   listActiveCoursesAction,
   listCohortRosterAction,
+  listModuleTeachersForCohortAction,
   listTeachersForCohortAction,
 } from '@/features/cohorts/actions';
 import { listCourseStructureAction } from '@/features/courses/actions';
@@ -16,6 +17,7 @@ import { listClassSessionsForCohortAction } from '@/features/class-sessions/acti
 import { CohortLifecyclePanel } from '@/features/cohorts/cohort-lifecycle-panel';
 import { PublicLinkPanel } from '@/features/cohorts/public-link-panel';
 import { TeacherCohortPanel } from '@/features/cohorts/teacher-cohort-panel';
+import { ModuleTeachersPanel } from '@/features/cohorts/module-teachers-panel';
 import { CohortRosterPanel } from '@/features/enrollments/cohort-roster-panel';
 import { ClassSessionsPanel } from '@/features/class-sessions/class-sessions-panel';
 import { NextCtlCohortSelector } from '@/features/cohorts/next-ctl-cohort-selector';
@@ -40,12 +42,13 @@ export default async function TurmaDetailPage({ params }: { params: Promise<{ id
   const cohort = await getCohortDetailAction(id);
   if (!cohort) notFound();
 
-  const [modules, sessions, roster, teachers, courses] = await Promise.all([
+  const [modules, sessions, roster, teachers, courses, moduleTeachers] = await Promise.all([
     listCourseStructureAction(cohort.course_id),
     listClassSessionsForCohortAction(id),
     listCohortRosterAction(id),
     listTeachersForCohortAction(id),
     listActiveCoursesAction(),
+    listModuleTeachersForCohortAction(id),
   ]);
 
   const lessonOptions = modules.flatMap((m) => m.lessons);
@@ -110,6 +113,21 @@ export default async function TurmaDetailPage({ params }: { params: Promise<{ id
             Professores
           </h2>
           <TeacherCohortPanel cohortId={cohort.id} teachers={teachers} />
+        </section>
+      ) : null}
+
+      {user.isAdmin ? (
+        <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-foreground">
+            <UserCog className="h-4 w-4" aria-hidden="true" />
+            Módulos e professores
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Professores escolhem o módulo direto em{' '}
+            <span className="font-medium text-foreground">/professores</span>, sem login — cada
+            módulo só pode ter um professor.
+          </p>
+          <ModuleTeachersPanel cohortLabel={`${cohort.code} — ${cohort.name}`} rows={moduleTeachers} />
         </section>
       ) : null}
 

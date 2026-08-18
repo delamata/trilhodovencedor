@@ -130,6 +130,14 @@ export type TeacherCohortsRow = {
   created_at: string;
 };
 
+export type ModuleTeachersRow = {
+  id: string;
+  cohort_id: string;
+  module_number: number;
+  teacher_id: string;
+  created_at: string;
+};
+
 export type EnrollmentsRow = {
   id: string;
   student_id: string;
@@ -290,17 +298,30 @@ export type PublicCheckinResult = {
 
 export type PublicSearchMembersResult = { member_id: string; display_name: string };
 
-export type PublicTeachableCohortResult = {
+export type PublicCreateMemberResult = { member_id: string; display_name: string };
+
+export type PublicTeachableModuleResult = {
   cohort_id: string;
   cohort_code: string;
   cohort_name: string;
   course_name: string;
+  module_number: number;
+  lesson1_code: string;
+  lesson1_title: string;
+  lesson2_code: string;
+  lesson2_title: string;
+  taken_by_member_id: string | null;
+  taken_by_name: string | null;
 };
 
-export type PublicRegisterTeacherResult = {
+export type ModuleRegistrationStatus =
+  'REGISTRADO' | 'JA_ERA_SEU' | 'JA_OCUPADO' | 'TURMA_INVALIDA' | 'MODULO_INVALIDO';
+
+export type PublicRegisterTeacherModulesResult = {
   cohort_id: string;
-  cohort_name: string;
-  already_registered: boolean;
+  module_number: number;
+  cohort_name: string | null;
+  status: ModuleRegistrationStatus;
 };
 
 // ---------------------------------------------------------------------
@@ -421,6 +442,27 @@ export interface Database {
             columns: ['cohort_id'];
             isOneToOne: false;
             referencedRelation: 'cohorts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      module_teachers: {
+        Row: ModuleTeachersRow;
+        Insert: Partial<ModuleTeachersRow>;
+        Update: Partial<ModuleTeachersRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'module_teachers_cohort_id_fkey';
+            columns: ['cohort_id'];
+            isOneToOne: false;
+            referencedRelation: 'cohorts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'module_teachers_teacher_id_fkey';
+            columns: ['teacher_id'];
+            isOneToOne: false;
+            referencedRelation: 'members';
             referencedColumns: ['id'];
           },
         ];
@@ -648,18 +690,24 @@ export interface Database {
         Args: { p_name_query: string; p_ip?: string | null };
         Returns: PublicSearchMembersResult[];
       };
-      trilho_public_list_teachable_cohorts: {
-        Args: Record<string, never>;
-        Returns: PublicTeachableCohortResult[];
+      trilho_public_list_celulas: { Args: Record<string, never>; Returns: { celula: string }[] };
+      trilho_public_create_member: {
+        Args: { p_nome: string; p_tel: string; p_celula: string; p_ip?: string | null };
+        Returns: PublicCreateMemberResult[];
       };
-      trilho_public_register_teacher: {
+      trilho_public_list_teachable_modules: {
+        Args: Record<string, never>;
+        Returns: PublicTeachableModuleResult[];
+      };
+      trilho_public_register_teacher_modules: {
         Args: {
           p_member_id: string;
           p_phone_suffix: string;
           p_cohort_ids: string[];
+          p_module_numbers: number[];
           p_ip?: string | null;
         };
-        Returns: PublicRegisterTeacherResult[];
+        Returns: PublicRegisterTeacherModulesResult[];
       };
     };
   };

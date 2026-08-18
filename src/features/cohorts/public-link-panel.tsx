@@ -74,8 +74,8 @@ export function PublicLinkPanel({
       {checkinUrl ? (
         <div className="space-y-2">
           <p className="rounded-lg border border-[#f59e0b]/30 bg-[#f59e0b]/10 p-3 text-sm text-[#8a5a00] dark:text-[#fbbf24]">
-            Este link só é exibido agora — copie e distribua para a turma (WhatsApp, mural, etc).
-            Se sair desta página sem copiar, será preciso gerar um novo.
+            Este link só é exibido agora — copie e distribua para a turma (WhatsApp, mural, etc). Se
+            sair desta página sem copiar, será preciso gerar um novo.
           </p>
           <QRCodePanel url={checkinUrl} title={`Presença — ${cohortCode}`} />
         </div>

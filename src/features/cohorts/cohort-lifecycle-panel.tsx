@@ -8,7 +8,13 @@ import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import type { CohortStatus } from '@/types/database';
 import { activateCohortAction, cancelCohortAction, finalizeCohortAction } from './actions';
 
-export function CohortLifecyclePanel({ cohortId, status }: { cohortId: string; status: CohortStatus }) {
+export function CohortLifecyclePanel({
+  cohortId,
+  status,
+}: {
+  cohortId: string;
+  status: CohortStatus;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 

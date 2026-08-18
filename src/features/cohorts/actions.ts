@@ -443,3 +443,87 @@ export async function enrollEligibleStudentsAction(
   revalidatePath('/alunos');
   return { success: true, message: `${data} aluno(s) matriculado(s) no CTL.`, count: data ?? 0 };
 }
+
+export interface ModuleTeacherRow {
+  moduleTeacherId: string | null;
+  moduleNumber: number;
+  lesson1Code: string;
+  lesson1Title: string;
+  lesson2Code: string;
+  lesson2Title: string;
+  teacherId: string | null;
+  teacherName: string | null;
+}
+
+/** Um registro por módulo do curso desta turma, com o professor responsável (se algum professor já escolheu). */
+export async function listModuleTeachersForCohortAction(
+  cohortId: string,
+): Promise<ModuleTeacherRow[]> {
+  const supabase = await createClient();
+
+  const { data: cohort } = await supabase
+    .from('cohorts')
+    .select('course_id')
+    .eq('id', cohortId)
+    .maybeSingle();
+  if (!cohort) return [];
+
+  const [{ data: lessons }, { data: assignments }] = await Promise.all([
+    supabase
+      .from('lesson_templates')
+      .select('module_number, lesson_number, lesson_code, title')
+      .eq('course_id', cohort.course_id)
+      .order('module_number')
+      .order('lesson_number'),
+    supabase
+      .from('module_teachers')
+      .select('id, module_number, teacher_id, members(nome)')
+      .eq('cohort_id', cohortId),
+  ]);
+
+  type LessonPick = {
+    module_number: number;
+    lesson_number: number;
+    lesson_code: string;
+    title: string;
+  };
+  const byModule = new Map<number, { lesson1?: LessonPick; lesson2?: LessonPick }>();
+  for (const lesson of lessons ?? []) {
+    const entry = byModule.get(lesson.module_number) ?? {};
+    if (lesson.lesson_number === 1) entry.lesson1 = lesson;
+    else entry.lesson2 = lesson;
+    byModule.set(lesson.module_number, entry);
+  }
+
+  const assignmentByModule = new Map((assignments ?? []).map((a) => [a.module_number, a]));
+
+  return Array.from(byModule.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([moduleNumber, { lesson1, lesson2 }]) => {
+      const assignment = assignmentByModule.get(moduleNumber);
+      const member = assignment
+        ? Array.isArray(assignment.members)
+          ? assignment.members[0]
+          : assignment.members
+        : null;
+      return {
+        moduleTeacherId: assignment?.id ?? null,
+        moduleNumber,
+        lesson1Code: lesson1?.lesson_code ?? '—',
+        lesson1Title: lesson1?.title ?? '—',
+        lesson2Code: lesson2?.lesson_code ?? '—',
+        lesson2Title: lesson2?.title ?? '—',
+        teacherId: assignment?.teacher_id ?? null,
+        teacherName: member?.nome ?? null,
+      };
+    });
+}
+
+export async function removeModuleTeacherAction(moduleTeacherId: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.from('module_teachers').delete().eq('id', moduleTeacherId);
+  if (error) return { success: false, message: 'Não foi possível remover o professor do módulo.' };
+  revalidatePath('/turmas');
+  return { success: true, message: 'Professor removido do módulo.' };
+}

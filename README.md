@@ -12,10 +12,12 @@ de presença dos cursos do Trilho do Vencedor — **Maturidade** e **CTL**.
   permanente por turma (`/presenca/[turma]?t=TOKEN`), buscando o próprio
   nome e confirmando com os últimos 4 dígitos do telefone.
 - Professores também se cadastram **sem login**, em `/professores` — buscam
-  o próprio nome, confirmam pelos 4 últimos dígitos do telefone e escolhem
-  quais turmas vão lecionar (vira `teacher_cohorts`). Pra de fato abrir
-  chamada e ver a turma, aí sim precisam de um login (concedido pela
-  administração).
+  o próprio nome (ou criam um cadastro de membro novo, na hora), confirmam
+  pelos 4 últimos dígitos do telefone e escolhem **quais módulos** vão
+  lecionar (não a turma inteira) — cada módulo só pode ter um professor.
+  Pra de fato abrir chamada e ver a turma, aí sim precisam de um login
+  (concedido pela administração). O admin acompanha o resumo módulo →
+  professor de cada turma em `/turmas/[id]` e pode compartilhar no WhatsApp.
 - Administradores criam turmas, definem a estrutura de módulos/aulas de cada
   curso e agendam o calendário de cada turma manualmente — Maturidade e CTL
   têm calendários totalmente independentes. Também registram desistência,
@@ -183,6 +185,7 @@ supabase/migrations/20260809100700_trilho_v2_decouple_ctl_calendar.sql
 supabase/migrations/20260809100800_trilho_v2_delete_cohort.sql
 supabase/migrations/20260809100900_trilho_v2_edit_delete_class_session.sql
 supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql
+supabase/migrations/20260810100000_trilho_v2_module_teachers.sql
 ```
 
 As migrations `20260807*`/`20260808*` criam o schema v1 (curso-cêntrico); as

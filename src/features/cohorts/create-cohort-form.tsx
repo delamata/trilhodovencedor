@@ -17,10 +17,7 @@ import {
 } from '@/components/ui/select';
 import { createCohortSchema, type CreateCohortInput } from '@/validations/cohort';
 import type { CoursesRow } from '@/types/database';
-import {
-  createCohortAction,
-  listCohortOptionsForCourseAction,
-} from './actions';
+import { createCohortAction, listCohortOptionsForCourseAction } from './actions';
 
 export function CreateCohortForm({
   courses,
@@ -92,7 +89,9 @@ export function CreateCohortForm({
             ))}
           </SelectContent>
         </Select>
-        {errors.courseId ? <p className="text-sm text-destructive">{errors.courseId.message}</p> : null}
+        {errors.courseId ? (
+          <p className="text-sm text-destructive">{errors.courseId.message}</p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -112,12 +111,16 @@ export function CreateCohortForm({
         <div className="space-y-1.5">
           <Label htmlFor="startDate">Data de início</Label>
           <Input id="startDate" type="date" {...register('startDate')} />
-          {errors.startDate ? <p className="text-sm text-destructive">{errors.startDate.message}</p> : null}
+          {errors.startDate ? (
+            <p className="text-sm text-destructive">{errors.startDate.message}</p>
+          ) : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="endDate">Data de término (prevista)</Label>
           <Input id="endDate" type="date" {...register('endDate')} />
-          {errors.endDate ? <p className="text-sm text-destructive">{errors.endDate.message}</p> : null}
+          {errors.endDate ? (
+            <p className="text-sm text-destructive">{errors.endDate.message}</p>
+          ) : null}
         </div>
       </div>
 

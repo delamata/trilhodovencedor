@@ -7,7 +7,11 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { MemberCombobox } from '@/components/shared/member-combobox';
 import { searchMembersAction, type MemberSearchResult } from '@/features/students/actions';
-import { addTeacherToCohortAction, removeTeacherFromCohortAction, type TeacherListItem } from './actions';
+import {
+  addTeacherToCohortAction,
+  removeTeacherFromCohortAction,
+  type TeacherListItem,
+} from './actions';
 
 export function TeacherCohortPanel({
   cohortId,
@@ -64,7 +68,12 @@ export function TeacherCohortPanel({
               className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm"
             >
               {teacher.nome}
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => handleRemove(teacher.teacherId)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => handleRemove(teacher.teacherId)}
+              >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
             </li>

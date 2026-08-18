@@ -4,18 +4,21 @@ import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { friendlyRpcError } from '@/lib/errors';
 import type {
-  PublicRegisterTeacherResult,
+  PublicCreateMemberResult,
+  PublicRegisterTeacherModulesResult,
   PublicSearchMembersResult,
-  PublicTeachableCohortResult,
+  PublicTeachableModuleResult,
 } from '@/types/database';
 
 /**
  * Ações do cadastro público de professor (sem login). Mesma postura de
- * segurança do check-in público de aluno: só chama as 3 funções
+ * segurança do check-in público de aluno: só chama as funções
  * liberadas para "anon" (ver
- * supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql),
- * identidade confirmada por nome + últimos 4 dígitos do telefone, erro
- * sempre genérico.
+ * supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql
+ * e 20260810100000_trilho_v2_module_teachers.sql), identidade
+ * confirmada por nome + últimos 4 dígitos do telefone, erro sempre
+ * genérico. A unidade de escolha é o MÓDULO (não a turma inteira) —
+ * cada módulo só pode ter um professor.
  */
 
 async function clientIp(): Promise<string | null> {
@@ -47,30 +50,66 @@ export async function searchPublicMembersAction(query: string): Promise<SearchMe
   return { success: true, message: '', members: data ?? [] };
 }
 
-export async function listTeachableCohortsAction(): Promise<PublicTeachableCohortResult[]> {
+export async function listPublicCelulasAction(): Promise<string[]> {
   const supabase = await createClient();
-  const { data } = await supabase.rpc('trilho_public_list_teachable_cohorts');
-  return data ?? [];
+  const { data } = await supabase.rpc('trilho_public_list_celulas');
+  return (data ?? []).map((row) => row.celula);
 }
 
-export interface RegisterTeacherResult {
+export interface CreateMemberResult {
   success: boolean;
   message: string;
-  results: PublicRegisterTeacherResult[];
+  member: PublicCreateMemberResult | null;
 }
 
-export async function submitPublicTeacherRegistrationAction(
-  memberId: string,
-  phoneSuffix: string,
-  cohortIds: string[],
-): Promise<RegisterTeacherResult> {
+/** Cadastra um professor que ainda não é membro conhecido do sistema. */
+export async function createPublicMemberAction(
+  nome: string,
+  tel: string,
+  celula: string,
+): Promise<CreateMemberResult> {
   const supabase = await createClient();
   const ip = await clientIp();
 
-  const { data, error } = await supabase.rpc('trilho_public_register_teacher', {
+  const { data, error } = await supabase.rpc('trilho_public_create_member', {
+    p_nome: nome,
+    p_tel: tel,
+    p_celula: celula,
+    p_ip: ip,
+  });
+
+  if (error) {
+    return { success: false, message: friendlyRpcError(error.message), member: null };
+  }
+
+  return { success: true, message: '', member: data?.[0] ?? null };
+}
+
+export async function listTeachableModulesAction(): Promise<PublicTeachableModuleResult[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc('trilho_public_list_teachable_modules');
+  return data ?? [];
+}
+
+export interface RegisterModulesResult {
+  success: boolean;
+  message: string;
+  results: PublicRegisterTeacherModulesResult[];
+}
+
+export async function submitModuleRegistrationAction(
+  memberId: string,
+  phoneSuffix: string,
+  selections: { cohortId: string; moduleNumber: number }[],
+): Promise<RegisterModulesResult> {
+  const supabase = await createClient();
+  const ip = await clientIp();
+
+  const { data, error } = await supabase.rpc('trilho_public_register_teacher_modules', {
     p_member_id: memberId,
     p_phone_suffix: phoneSuffix.trim(),
-    p_cohort_ids: cohortIds,
+    p_cohort_ids: selections.map((s) => s.cohortId),
+    p_module_numbers: selections.map((s) => s.moduleNumber),
     p_ip: ip,
   });
 

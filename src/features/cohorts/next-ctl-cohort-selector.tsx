@@ -68,8 +68,8 @@ export function NextCtlCohortSelector({
     <div className="space-y-2">
       <p className="text-sm text-muted-foreground">
         Turma de CTL para onde os aprovados nesta turma serão promovidos automaticamente ao
-        finalizar. O calendário de aulas de cada turma continua independente — as aulas de CTL
-        são agendadas manualmente, como em qualquer turma.
+        finalizar. O calendário de aulas de cada turma continua independente — as aulas de CTL são
+        agendadas manualmente, como em qualquer turma.
       </p>
       <div className="flex items-center gap-2">
         <Select value={value} onValueChange={(v) => setValue(v ?? 'none')}>
@@ -85,7 +85,11 @@ export function NextCtlCohortSelector({
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" onClick={handleSave} disabled={busy || value === (currentNextCohortId ?? 'none')}>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={busy || value === (currentNextCohortId ?? 'none')}
+        >
           Salvar
         </Button>
       </div>
