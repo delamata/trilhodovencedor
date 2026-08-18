@@ -308,8 +308,10 @@ export type PublicTeachableModuleResult = {
   module_number: number;
   lesson1_code: string;
   lesson1_title: string;
+  lesson1_date: string | null;
   lesson2_code: string;
   lesson2_title: string;
+  lesson2_date: string | null;
   taken_by_member_id: string | null;
   taken_by_name: string | null;
 };

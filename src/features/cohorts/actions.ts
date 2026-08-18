@@ -449,13 +449,15 @@ export interface ModuleTeacherRow {
   moduleNumber: number;
   lesson1Code: string;
   lesson1Title: string;
+  lesson1Date: string | null;
   lesson2Code: string;
   lesson2Title: string;
+  lesson2Date: string | null;
   teacherId: string | null;
   teacherName: string | null;
 }
 
-/** Um registro por módulo do curso desta turma, com o professor responsável (se algum professor já escolheu). */
+/** Um registro por módulo do curso desta turma, com o professor responsável (se algum professor já escolheu) e a data de cada aula (se já agendada). */
 export async function listModuleTeachersForCohortAction(
   cohortId: string,
 ): Promise<ModuleTeacherRow[]> {
@@ -468,10 +470,10 @@ export async function listModuleTeachersForCohortAction(
     .maybeSingle();
   if (!cohort) return [];
 
-  const [{ data: lessons }, { data: assignments }] = await Promise.all([
+  const [{ data: lessons }, { data: assignments }, { data: sessions }] = await Promise.all([
     supabase
       .from('lesson_templates')
-      .select('module_number, lesson_number, lesson_code, title')
+      .select('id, module_number, lesson_number, lesson_code, title')
       .eq('course_id', cohort.course_id)
       .order('module_number')
       .order('lesson_number'),
@@ -479,9 +481,19 @@ export async function listModuleTeachersForCohortAction(
       .from('module_teachers')
       .select('id, module_number, teacher_id, members(nome)')
       .eq('cohort_id', cohortId),
+    supabase
+      .from('class_sessions')
+      .select('lesson_template_id, class_date')
+      .eq('cohort_id', cohortId)
+      .neq('status', 'CANCELLED'),
   ]);
 
+  const dateByLessonTemplateId = new Map(
+    (sessions ?? []).map((s) => [s.lesson_template_id, s.class_date]),
+  );
+
   type LessonPick = {
+    id: string;
     module_number: number;
     lesson_number: number;
     lesson_code: string;
@@ -511,8 +523,10 @@ export async function listModuleTeachersForCohortAction(
         moduleNumber,
         lesson1Code: lesson1?.lesson_code ?? '—',
         lesson1Title: lesson1?.title ?? '—',
+        lesson1Date: lesson1 ? (dateByLessonTemplateId.get(lesson1.id) ?? null) : null,
         lesson2Code: lesson2?.lesson_code ?? '—',
         lesson2Title: lesson2?.title ?? '—',
+        lesson2Date: lesson2 ? (dateByLessonTemplateId.get(lesson2.id) ?? null) : null,
         teacherId: assignment?.teacher_id ?? null,
         teacherName: member?.nome ?? null,
       };

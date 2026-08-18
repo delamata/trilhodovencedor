@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { formatDate } from '@/lib/format';
 import type {
   PublicRegisterTeacherModulesResult,
   PublicSearchMembersResult,
@@ -27,6 +28,13 @@ import {
 
 type Step = 'identify' | 'select-modules' | 'success';
 type IdentifyMode = 'search' | 'new';
+
+/** "11/08/2026 e 18/08/2026", só a que existir, ou "" se nenhuma aula está agendada ainda. */
+function formatModuleDates(module: PublicTeachableModuleResult): string {
+  const dates = [module.lesson1_date, module.lesson2_date].filter((d): d is string => Boolean(d));
+  if (dates.length === 0) return '';
+  return dates.map((d) => formatDate(d)).join(' e ');
+}
 
 interface IdentifiedTeacher {
   memberId: string;
@@ -266,6 +274,7 @@ export function PublicTeacherRegistrationFlow({
                     const taken = Boolean(m.taken_by_member_id);
                     const isMine = m.taken_by_member_id === teacher.memberId;
                     const key = moduleKey(m.cohort_id, m.module_number);
+                    const dates = formatModuleDates(m);
                     return (
                       <li key={key}>
                         <label
@@ -289,6 +298,15 @@ export function PublicTeacherRegistrationFlow({
                             <span className="ml-1 text-muted-foreground">
                               — {m.lesson1_title} / {m.lesson2_title}
                             </span>
+                            {dates ? (
+                              <span className="mt-0.5 block text-xs text-muted-foreground">
+                                📅 {dates}
+                              </span>
+                            ) : (
+                              <span className="mt-0.5 block text-xs text-muted-foreground">
+                                Datas ainda não agendadas
+                              </span>
+                            )}
                           </span>
                           {taken ? (
                             <span className="text-xs text-muted-foreground">
