@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
 import { getSupabaseAnonKey, getSupabaseUrl } from './env';
 
-const PUBLIC_PATHS = ['/login', '/esqueci-senha', '/redefinir-senha', '/presenca'];
+const PUBLIC_PATHS = ['/login', '/esqueci-senha', '/redefinir-senha', '/presenca', '/professores'];
 
 function isPublicPath(pathname: string): boolean {
   return (

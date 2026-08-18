@@ -187,6 +187,13 @@ export type PublicCheckinAttemptsRow = {
   created_at: string;
 };
 
+export type PublicTeacherAttemptsRow = {
+  id: string;
+  ip_hash: string;
+  kind: 'SEARCH' | 'REGISTER';
+  created_at: string;
+};
+
 export type TrilhoStudentSummaryRow = {
   enrollment_id: string;
   student_id: string;
@@ -279,6 +286,21 @@ export type PublicCheckinResult = {
   max_absences: number;
   absences_remaining: number;
   attendance_pct: number;
+};
+
+export type PublicSearchMembersResult = { member_id: string; display_name: string };
+
+export type PublicTeachableCohortResult = {
+  cohort_id: string;
+  cohort_code: string;
+  cohort_name: string;
+  course_name: string;
+};
+
+export type PublicRegisterTeacherResult = {
+  cohort_id: string;
+  cohort_name: string;
+  already_registered: boolean;
 };
 
 // ---------------------------------------------------------------------
@@ -471,6 +493,12 @@ export interface Database {
         Update: Partial<PublicCheckinAttemptsRow>;
         Relationships: [];
       };
+      public_teacher_attempts: {
+        Row: PublicTeacherAttemptsRow;
+        Insert: Partial<PublicTeacherAttemptsRow>;
+        Update: Partial<PublicTeacherAttemptsRow>;
+        Relationships: [];
+      };
     };
     Views: {
       trilho_student_summary: { Row: TrilhoStudentSummaryRow; Relationships: [] };
@@ -615,6 +643,23 @@ export interface Database {
           p_ip?: string | null;
         };
         Returns: PublicCheckinResult[];
+      };
+      trilho_public_search_members: {
+        Args: { p_name_query: string; p_ip?: string | null };
+        Returns: PublicSearchMembersResult[];
+      };
+      trilho_public_list_teachable_cohorts: {
+        Args: Record<string, never>;
+        Returns: PublicTeachableCohortResult[];
+      };
+      trilho_public_register_teacher: {
+        Args: {
+          p_member_id: string;
+          p_phone_suffix: string;
+          p_cohort_ids: string[];
+          p_ip?: string | null;
+        };
+        Returns: PublicRegisterTeacherResult[];
       };
     };
   };

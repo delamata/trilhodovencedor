@@ -11,8 +11,11 @@ de presença dos cursos do Trilho do Vencedor — **Maturidade** e **CTL**.
 - Alunos confirmam presença **sem precisar de login**, por um link público e
   permanente por turma (`/presenca/[turma]?t=TOKEN`), buscando o próprio
   nome e confirmando com os últimos 4 dígitos do telefone.
-- Professores (vinculados a uma ou mais turmas) abrem/fecham a chamada de
-  cada aula e corrigem presença manualmente quando preciso.
+- Professores também se cadastram **sem login**, em `/professores` — buscam
+  o próprio nome, confirmam pelos 4 últimos dígitos do telefone e escolhem
+  quais turmas vão lecionar (vira `teacher_cohorts`). Pra de fato abrir
+  chamada e ver a turma, aí sim precisam de um login (concedido pela
+  administração).
 - Administradores criam turmas, definem a estrutura de módulos/aulas de cada
   curso e agendam o calendário de cada turma manualmente — Maturidade e CTL
   têm calendários totalmente independentes. Também registram desistência,
@@ -177,6 +180,9 @@ supabase/migrations/20260809100400_trilho_v2_rls.sql
 supabase/migrations/20260809100500_trilho_v2_views.sql
 supabase/migrations/20260809100600_trilho_v2_fix_members_policy.sql
 supabase/migrations/20260809100700_trilho_v2_decouple_ctl_calendar.sql
+supabase/migrations/20260809100800_trilho_v2_delete_cohort.sql
+supabase/migrations/20260809100900_trilho_v2_edit_delete_class_session.sql
+supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql
 ```
 
 As migrations `20260807*`/`20260808*` criam o schema v1 (curso-cêntrico); as
@@ -334,6 +340,7 @@ src/
     (app)/            rotas autenticadas (sidebar desktop + nav inferior mobile)
       dashboard/ alunos/ cursos/ turmas/ aulas/ relatorios/ configuracoes/ perfil/
     presenca/[turma]/  check-in público SEM login — fora do grupo (app) de propósito
+    professores/       cadastro público de professor SEM login — idem
     login/ esqueci-senha/ redefinir-senha/   rotas públicas de auth
     api/relatorios/[type]/                   download de relatórios (CSV/XLSX)
   components/
@@ -345,7 +352,7 @@ src/
                         EmptyState, PageHeader
   features/            lógica por domínio (actions.ts + componentes)
     auth/ courses/ cohorts/ class-sessions/ enrollments/ students/
-    public-checkin/ dashboard/ reports/
+    public-checkin/ public-teacher-registration/ dashboard/ reports/
   lib/
     supabase/          clients (browser, server, admin, middleware)
     auth/              resolução do usuário logado e papel

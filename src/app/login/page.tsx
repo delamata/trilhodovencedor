@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { LogoMark } from '@/components/shared/logo-mark';
 import { LoginForm } from '@/features/auth/login-form';
@@ -28,7 +29,12 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Não tem uma conta? Alunos e professores são cadastrados pela administração.
+          Aluno? A presença é confirmada pelo link enviado pela sua turma, sem precisar de login.
+          <br />É professor e ainda não escolheu sua turma?{' '}
+          <Link href="/professores" className="font-medium text-primary hover:underline">
+            Cadastre-se aqui
+          </Link>
+          .
         </p>
       </div>
     </main>

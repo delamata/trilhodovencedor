@@ -1,7 +1,7 @@
 # Regras de negócio — Trilho do Vencedor (v2)
 
 Este documento é a referência canônica das regras de negócio críticas do
-sistema, numeradas **BR-001 a BR-015**. Cada regra aponta para onde ela é
+sistema, numeradas **BR-001 a BR-016**. Cada regra aponta para onde ela é
 **imposta de verdade** (quase sempre no banco, dentro de uma função
 `SECURITY DEFINER` ou de uma constraint) e onde ela é **testada**.
 
@@ -191,7 +191,27 @@ matriculado na turma para alguém só com o link público.
 - **Imposto por**: `trilho_public_checkin()` usa o mesmo `raise exception
   'NAO_FOI_POSSIVEL_VALIDAR'` tanto para aluno inexistente quanto para
   telefone incorreto quanto para matrícula não ativa/desistente.
-- **Testado por**: `tests/integration/critical-rules.test.ts` (TESTE 17).
+- **Testado por**: `tests/integration/critical-rules.test.ts` (TESTE 15).
+
+### BR-016 — Professor se cadastra sem login, mas com a mesma identificação leve
+
+Assim como o check-in do aluno (BR-013), virar professor de uma turma
+(`teacher_cohorts`) não exige login — o próprio professor se identifica em
+`/professores` por nome (busca entre os membros ativos) + confirmação pelos
+últimos 4 dígitos do telefone cadastrado, e escolhe em quais turmas
+(`PLANNED`/`ACTIVE`) vai lecionar. Nenhum cadastro de professor separado é
+criado — é sempre um vínculo com um `member` já existente.
+
+- **Imposto por**: `trilho_public_register_teacher()`
+  (`supabase/migrations/20260810090000_trilho_v2_public_teacher_registration.sql`)
+  — mesmo padrão de erro genérico (`NAO_FOI_POSSIVEL_VALIDAR`) e rate
+  limiting em `public_teacher_attempts` (tabela dedicada, separada de
+  `public_checkin_attempts`). Só grava `teacher_cohorts`; o role `anon` não
+  tem grant em nenhuma tabela, só nas 3 funções liberadas.
+- **Note**: o cadastro em si não dá acesso a nada — pra abrir chamada ou ver
+  a turma, o professor ainda precisa de login (fora do escopo deste
+  cadastro), que continua exigindo autenticação normal (BR-014).
+- **Testado por**: `tests/e2e/public-teacher-registration.spec.ts`.
 
 ---
 
