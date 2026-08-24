@@ -26,7 +26,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { MemberCombobox } from '@/components/shared/member-combobox';
-import { getCelulaOptionsAction, searchMembersAction, type MemberSearchResult } from '@/features/students/actions';
+import {
+  getCelulaOptionsAction,
+  searchMembersAction,
+  type MemberSearchResult,
+} from '@/features/students/actions';
 import type { CohortRosterEntry } from '@/features/cohorts/actions';
 import { dropoutReasonOptions } from '@/validations/enrollment';
 import { endEnrollmentAction, enrollStudentAction, markDropoutAction } from './actions';
@@ -46,9 +50,11 @@ function todayIso() {
 
 export function CohortRosterPanel({
   cohortId,
+  cohortLabel,
   roster,
 }: {
   cohortId: string;
+  cohortLabel: string;
   roster: CohortRosterEntry[];
 }) {
   const router = useRouter();
@@ -141,7 +147,8 @@ export function CohortRosterPanel({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {active.length} aluno{active.length === 1 ? '' : 's'} ativo{active.length === 1 ? '' : 's'}
+          {active.length} aluno{active.length === 1 ? '' : 's'} ativo
+          {active.length === 1 ? '' : 's'}
         </p>
         <Dialog open={enrollOpen} onOpenChange={setEnrollOpen}>
           <DialogTrigger render={<Button size="sm" />}>Matricular aluno</DialogTrigger>
@@ -174,7 +181,11 @@ export function CohortRosterPanel({
             </div>
 
             {mode === 'existing' ? (
-              <MemberCombobox value={selectedMember} onChange={setSelectedMember} onSearch={searchMembersAction} />
+              <MemberCombobox
+                value={selectedMember}
+                onChange={setSelectedMember}
+                onSearch={searchMembersAction}
+              />
             ) : (
               <div className="space-y-3">
                 <div className="space-y-1.5">
@@ -183,7 +194,12 @@ export function CohortRosterPanel({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="new-email">E-mail</Label>
-                  <Input id="new-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="new-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="new-tel">Telefone</Label>
@@ -231,6 +247,7 @@ export function CohortRosterPanel({
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-3 py-2 font-medium">Nome</th>
+                <th className="px-3 py-2 font-medium">Turma</th>
                 <th className="px-3 py-2 font-medium">Status</th>
                 <th className="px-3 py-2 font-medium">Resultado</th>
                 <th className="px-3 py-2" />
@@ -240,8 +257,11 @@ export function CohortRosterPanel({
               {[...active, ...others].map((row) => (
                 <tr key={row.enrollmentId} className="border-b border-border/60 last:border-0">
                   <td className="px-3 py-2 font-medium text-foreground">{row.nome}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{cohortLabel}</td>
                   <td className="px-3 py-2">
-                    <Badge variant={row.status === 'ACTIVE' ? 'secondary' : 'outline'}>{row.status}</Badge>
+                    <Badge variant={row.status === 'ACTIVE' ? 'secondary' : 'outline'}>
+                      {row.status}
+                    </Badge>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">{row.academicResult}</td>
                   <td className="px-3 py-2 text-right">
@@ -272,7 +292,10 @@ export function CohortRosterPanel({
         </div>
       )}
 
-      <Dialog open={Boolean(dropoutTarget)} onOpenChange={(open) => !open && setDropoutTarget(null)}>
+      <Dialog
+        open={Boolean(dropoutTarget)}
+        onOpenChange={(open) => !open && setDropoutTarget(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Registrar desistência</DialogTitle>
@@ -293,7 +316,10 @@ export function CohortRosterPanel({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dropout-reason">Motivo</Label>
-              <Select value={dropoutReason} onValueChange={(value) => setDropoutReason(value ?? 'OUTRO')}>
+              <Select
+                value={dropoutReason}
+                onValueChange={(value) => setDropoutReason(value ?? 'OUTRO')}
+              >
                 <SelectTrigger id="dropout-reason">
                   <SelectValue />
                 </SelectTrigger>
@@ -308,7 +334,12 @@ export function CohortRosterPanel({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dropout-notes">Observações (opcional)</Label>
-              <Textarea id="dropout-notes" rows={2} value={dropoutNotes} onChange={(e) => setDropoutNotes(e.target.value)} />
+              <Textarea
+                id="dropout-notes"
+                rows={2}
+                value={dropoutNotes}
+                onChange={(e) => setDropoutNotes(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>

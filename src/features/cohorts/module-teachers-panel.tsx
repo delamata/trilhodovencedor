@@ -6,8 +6,14 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { MemberCombobox } from '@/components/shared/member-combobox';
 import { formatDate } from '@/lib/format';
-import { removeModuleTeacherAction, type ModuleTeacherRow } from './actions';
+import { searchMembersAction, type MemberSearchResult } from '@/features/students/actions';
+import {
+  assignModuleTeacherAction,
+  removeModuleTeacherAction,
+  type ModuleTeacherRow,
+} from './actions';
 
 /** "11/08/2026 e 18/08/2026", só a(s) data(s) que existir(em), ou "" se nenhuma aula está agendada ainda. */
 function formatModuleDates(row: ModuleTeacherRow): string {
@@ -30,14 +36,19 @@ function buildWhatsAppSummary(cohortLabel: string, rows: ModuleTeacherRow[]): st
 }
 
 export function ModuleTeachersPanel({
+  cohortId,
   cohortLabel,
   rows,
 }: {
+  cohortId: string;
   cohortLabel: string;
   rows: ModuleTeacherRow[];
 }) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [assigningModule, setAssigningModule] = useState<number | null>(null);
+  const [selectedMember, setSelectedMember] = useState<MemberSearchResult | null>(null);
+  const [assigning, setAssigning] = useState(false);
 
   async function handleRemove(moduleTeacherId: string) {
     setBusyId(moduleTeacherId);
@@ -51,6 +62,34 @@ export function ModuleTeachersPanel({
       }
     } finally {
       setBusyId(null);
+    }
+  }
+
+  function startAssigning(moduleNumber: number) {
+    setAssigningModule(moduleNumber);
+    setSelectedMember(null);
+  }
+
+  function cancelAssigning() {
+    setAssigningModule(null);
+    setSelectedMember(null);
+  }
+
+  async function handleAssign(moduleNumber: number) {
+    if (!selectedMember) return;
+    setAssigning(true);
+    try {
+      const result = await assignModuleTeacherAction(cohortId, moduleNumber, selectedMember.id);
+      if (result.success) {
+        toast.success(result.message);
+        setAssigningModule(null);
+        setSelectedMember(null);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } finally {
+      setAssigning(false);
     }
   }
 
@@ -104,6 +143,32 @@ export function ModuleTeachersPanel({
                     <td className="px-3 py-2">
                       {row.teacherName ? (
                         row.teacherName
+                      ) : assigningModule === row.moduleNumber ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-56">
+                            <MemberCombobox
+                              value={selectedMember}
+                              onChange={setSelectedMember}
+                              onSearch={searchMembersAction}
+                              placeholder="Buscar professor…"
+                            />
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={!selectedMember || assigning}
+                            onClick={() => handleAssign(row.moduleNumber)}
+                          >
+                            Atribuir
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={assigning}
+                            onClick={cancelAssigning}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
                       ) : (
                         <Badge variant="outline">sem professor</Badge>
                       )}
@@ -118,6 +183,14 @@ export function ModuleTeachersPanel({
                           aria-label={`Remover professor do módulo ${row.moduleNumber}`}
                         >
                           <X className="h-3.5 w-3.5" aria-hidden="true" />
+                        </Button>
+                      ) : assigningModule !== row.moduleNumber ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startAssigning(row.moduleNumber)}
+                        >
+                          Atribuir professor
                         </Button>
                       ) : null}
                     </td>

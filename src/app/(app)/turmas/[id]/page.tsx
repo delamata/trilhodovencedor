@@ -124,10 +124,14 @@ export default async function TurmaDetailPage({ params }: { params: Promise<{ id
           </h2>
           <p className="mb-4 text-sm text-muted-foreground">
             Professores escolhem o módulo direto em{' '}
-            <span className="font-medium text-foreground">/professores</span>, sem login — cada
-            módulo só pode ter um professor.
+            <span className="font-medium text-foreground">/professores</span>, sem login, ou você
+            pode atribuir diretamente aqui — cada módulo só pode ter um professor.
           </p>
-          <ModuleTeachersPanel cohortLabel={`${cohort.code} — ${cohort.name}`} rows={moduleTeachers} />
+          <ModuleTeachersPanel
+            cohortId={cohort.id}
+            cohortLabel={`${cohort.code} — ${cohort.name}`}
+            rows={moduleTeachers}
+          />
         </section>
       ) : null}
 
@@ -149,7 +153,11 @@ export default async function TurmaDetailPage({ params }: { params: Promise<{ id
           <Users className="h-4 w-4" aria-hidden="true" />
           Alunos
         </h2>
-        <CohortRosterPanel cohortId={cohort.id} roster={roster} />
+        <CohortRosterPanel
+          cohortId={cohort.id}
+          cohortLabel={`${cohort.code} — ${cohort.name}`}
+          roster={roster}
+        />
       </section>
     </div>
   );

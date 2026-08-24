@@ -541,3 +541,40 @@ export async function removeModuleTeacherAction(moduleTeacherId: string): Promis
   revalidatePath('/turmas');
   return { success: true, message: 'Professor removido do módulo.' };
 }
+
+/**
+ * Admin atribui diretamente um professor a um módulo — atalho pro
+ * mesmo resultado que o professor teria se tivesse se cadastrado
+ * sozinho em /professores (BR-016): grava em `module_teachers` (índice
+ * único cohort+módulo barra dois professores no mesmo módulo) e também
+ * em `teacher_cohorts`, pra o professor ganhar acesso à turma inteira
+ * (abrir chamada etc.) como qualquer outro professor.
+ */
+export async function assignModuleTeacherAction(
+  cohortId: string,
+  moduleNumber: number,
+  teacherId: string,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('module_teachers')
+    .insert({ cohort_id: cohortId, module_number: moduleNumber, teacher_id: teacherId });
+  if (error) {
+    return {
+      success: false,
+      message:
+        error.code === '23505'
+          ? 'Este módulo já tem um professor. Remova antes de atribuir outro.'
+          : 'Não foi possível atribuir o professor a este módulo.',
+    };
+  }
+
+  await supabase
+    .from('teacher_cohorts')
+    .upsert({ teacher_id: teacherId, cohort_id: cohortId }, { onConflict: 'teacher_id,cohort_id' });
+
+  revalidatePath(`/turmas/${cohortId}`);
+  return { success: true, message: 'Professor atribuído ao módulo.' };
+}
