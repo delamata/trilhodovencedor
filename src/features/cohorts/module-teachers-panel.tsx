@@ -27,12 +27,12 @@ function buildWhatsAppSummary(cohortLabel: string, rows: ModuleTeacherRow[]): st
   for (const row of rows) {
     const teacher = row.teacherName ?? 'sem professor definido';
     const dates = formatModuleDates(row);
-    const dateSuffix = dates ? ` — ${dates}` : '';
-    lines.push(
-      `Módulo ${row.moduleNumber} (${row.lesson1Code}/${row.lesson2Code}${dateSuffix}): ${teacher}`,
-    );
+    lines.push(`*Módulo ${row.moduleNumber}*${dates ? ` — 📅 ${dates}` : ''}`);
+    lines.push(`${row.lesson1Code} — ${row.lesson1Title}`);
+    lines.push(`${row.lesson2Code} — ${row.lesson2Title}`);
+    lines.push(`👤 ${teacher}`, '');
   }
-  return lines.join('\n');
+  return lines.join('\n').trimEnd();
 }
 
 export function ModuleTeachersPanel({
