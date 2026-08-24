@@ -135,7 +135,12 @@ export function ModuleTeachersPanel({
                   <tr key={row.moduleNumber} className="border-b border-border/60 last:border-0">
                     <td className="px-3 py-2 font-medium text-foreground">{row.moduleNumber}</td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {row.lesson1Code} / {row.lesson2Code}
+                      <div>
+                        {row.lesson1Code} — {row.lesson1Title}
+                      </div>
+                      <div>
+                        {row.lesson2Code} — {row.lesson2Title}
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">
                       {dates || <span className="text-xs italic">ainda não agendada</span>}
