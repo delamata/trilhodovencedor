@@ -2,15 +2,15 @@
   "name": "Controle de Presença — Trilho do Vencedor",
   "short_name": "Trilho do Vencedor",
   "description": "Gestão de alunos, cursos, calendário de aulas e controle de presença.",
-  "start_url": "/dashboard",
-  "scope": "/",
+  "start_url": "/trilho/dashboard",
+  "scope": "/trilho/",
   "display": "standalone",
   "background_color": "#f6f7fb",
   "theme_color": "#3261af",
   "lang": "pt-BR",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/trilho/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/trilho/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/trilho/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

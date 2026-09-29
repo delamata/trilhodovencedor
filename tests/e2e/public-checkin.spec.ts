@@ -16,21 +16,25 @@ import { expect, test } from '@playwright/test';
  */
 
 test.describe('Check-in público (sem login)', () => {
-  test('link com token inválido mostra mensagem genérica, sem quebrar a página', async ({ page }) => {
-    await page.goto('/presenca/turma-que-nao-existe?t=token-errado');
+  test('link com token inválido mostra mensagem genérica, sem quebrar a página', async ({
+    page,
+  }) => {
+    await page.goto('/trilho/presenca/turma-que-nao-existe?t=token-errado');
     await expect(page.getByRole('heading', { name: 'Link inválido' })).toBeVisible();
     await expect(
       page.getByText('Este link de presença não é válido ou foi desativado.'),
     ).toBeVisible();
   });
 
-  test('link sem token (?t= ausente) também é tratado como inválido, não como erro', async ({ page }) => {
-    await page.goto('/presenca/turma-qualquer');
+  test('link sem token (?t= ausente) também é tratado como inválido, não como erro', async ({
+    page,
+  }) => {
+    await page.goto('/trilho/presenca/turma-qualquer');
     await expect(page.getByRole('heading', { name: 'Link inválido' })).toBeVisible();
   });
 
   test('página carrega sem nenhuma navegação/menu do painel autenticado', async ({ page }) => {
-    await page.goto('/presenca/turma-que-nao-existe?t=token-errado');
+    await page.goto('/trilho/presenca/turma-que-nao-existe?t=token-errado');
     await expect(page.getByRole('navigation')).toHaveCount(0);
   });
 });

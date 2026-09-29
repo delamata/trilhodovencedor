@@ -9,24 +9,24 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Cadastro de professor (sem login)', () => {
   test('/professores nunca exige login', async ({ page }) => {
-    await page.goto('/professores');
+    await page.goto('/trilho/professores');
     await expect(page).not.toHaveURL(/\/login/);
   });
 
   test('mostra o campo de busca por nome', async ({ page }) => {
-    await page.goto('/professores');
+    await page.goto('/trilho/professores');
     await expect(page.getByRole('heading', { name: 'Cadastro de professor' })).toBeVisible();
     await expect(page.getByLabel('Digite seu nome')).toBeVisible();
   });
 
   test('link "Cadastre-se aqui" na tela de login leva pra /professores', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/trilho/login');
     await page.getByRole('link', { name: 'Cadastre-se aqui' }).click();
     await expect(page).toHaveURL(/\/professores/);
   });
 
   test('fluxo "Sou novo" pede nome e telefone, mas nunca célula (BR-017)', async ({ page }) => {
-    await page.goto('/professores');
+    await page.goto('/trilho/professores');
     await page.getByRole('button', { name: 'Sou novo' }).click();
     await expect(page.getByLabel('Nome completo')).toBeVisible();
     await expect(page.getByLabel('Telefone (com DDD)')).toBeVisible();

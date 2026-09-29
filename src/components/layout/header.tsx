@@ -1,6 +1,7 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,7 +64,7 @@ export function Header({ user }: { user: CurrentUser }) {
           </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem render={<a href="/perfil" />}>Meu perfil</DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/perfil" />}>Meu perfil</DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => signOutAction()}>
             <LogOut className="h-4 w-4" aria-hidden="true" />
             Sair

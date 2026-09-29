@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { BASE_PATH } from '@/lib/base-path';
 
 /**
  * Símbolo da Videira (extraído de assets/logo-videira.png no repo do
@@ -10,7 +11,9 @@ import { cn } from '@/lib/utils';
 export function LogoMark({ size = 36, className }: { size?: number; className?: string }) {
   return (
     <Image
-      src="/videira-icon.png"
+      // next/image com src em string (arquivo de public/) NÃO ganha o
+      // basePath sozinho — diferente de import estático de imagem.
+      src={`${BASE_PATH}/videira-icon.png`}
       alt=""
       width={size}
       height={size}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { BASE_PATH } from '@/lib/base-path';
 import './globals.css';
 
 const geistSans = Geist({
@@ -18,7 +19,10 @@ export const metadata: Metadata = {
   title: 'Controle de Presença — Trilho do Vencedor',
   description:
     'Gestão de alunos, cursos, calendário de aulas e controle de presença — Trilho do Vencedor.',
-  manifest: '/manifest.webmanifest',
+  // O Next NÃO prefixa sozinho os caminhos de manifest/icons do
+  // metadata com o basePath (diferente de <Link>/<Image>) — por isso
+  // o BASE_PATH na mão aqui (ver src/lib/base-path.ts).
+  manifest: `${BASE_PATH}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -26,10 +30,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: `${BASE_PATH}/icon-32.png`, sizes: '32x32', type: 'image/png' },
+      { url: `${BASE_PATH}/icon-192.png`, sizes: '192x192', type: 'image/png' },
     ],
-    apple: '/icon-180.png',
+    apple: `${BASE_PATH}/icon-180.png`,
   },
 };
 
