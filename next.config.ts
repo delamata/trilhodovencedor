@@ -20,6 +20,9 @@ const OLD_TOP_LEVEL_PATHS = [
   '/api',
 ];
 
+// Onde o Oikos (site estático) está publicado de verdade.
+const OIKOS_ORIGIN = 'https://delamata.github.io/oikos';
+
 const nextConfig: NextConfig = {
   // Unificação com o Oikos num domínio só: o Oikos ocupa a raiz (/) e
   // este app passa a viver inteiro sob /trilho. O Next prefixa
@@ -36,9 +39,30 @@ const nextConfig: NextConfig = {
   // `source`/`destination` como caminhos absolutos de verdade — sem
   // isso ele tentaria prefixar o `source` também, e a rota antiga
   // (sem prefixo) nunca bateria.
+  // A raiz (/) NÃO redireciona mais pro Trilho: ela é do Oikos (ver
+  // `rewrites` abaixo).
+  async rewrites() {
+    return {
+      // `fallback` só roda quando nenhuma rota do Next (nem arquivo de
+      // public/) bateu — ou seja, tudo que NÃO é do Trilho cai no Oikos,
+      // servido pelo GitHub Pages por trás (proxy transparente: o
+      // navegador continua vendo o mesmo domínio, então localStorage/
+      // sessão do Oikos funcionam normalmente). O lookahead evita
+      // engolir URLs inexistentes de /trilho/* (que devem dar o 404
+      // do próprio Trilho, não o do GitHub Pages).
+      fallback: [
+        {
+          source: '/:path((?!trilho(?:/|$)).*)',
+          destination: `${OIKOS_ORIGIN}/:path`,
+          basePath: false as const,
+        },
+        { source: '/', destination: `${OIKOS_ORIGIN}/`, basePath: false as const },
+      ],
+    };
+  },
+
   async redirects() {
     return [
-      { source: '/', destination: '/trilho', basePath: false as const, permanent: false },
       ...OLD_TOP_LEVEL_PATHS.flatMap((path) => [
         { source: path, destination: `/trilho${path}`, basePath: false as const, permanent: false },
         {

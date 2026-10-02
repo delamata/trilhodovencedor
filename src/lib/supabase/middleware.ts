@@ -49,13 +49,20 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const { pathname, search } = request.nextUrl;
 
   if (!user && !isPublicPath(pathname)) {
-    const loginUrl = new URL('/login', request.url);
+    // clone() preserva o basePath (/trilho); new URL('/login', request.url)
+    // o perderia e dependeria do redirect de compatibilidade.
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.search = '';
     loginUrl.searchParams.set('redirect', `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
   if (user && (pathname === '/login' || pathname === '/')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const dashboardUrl = request.nextUrl.clone();
+    dashboardUrl.pathname = '/dashboard';
+    dashboardUrl.search = '';
+    return NextResponse.redirect(dashboardUrl);
   }
 
   return response;
