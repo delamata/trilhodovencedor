@@ -3,7 +3,16 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
 import { getSupabaseAnonKey, getSupabaseUrl } from './env';
 
-const PUBLIC_PATHS = ['/login', '/esqueci-senha', '/redefinir-senha', '/presenca', '/professores'];
+const PUBLIC_PATHS = [
+  '/login',
+  '/esqueci-senha',
+  '/redefinir-senha',
+  '/presenca',
+  '/professores',
+  // Ponte de login único vinda do Oikos (ver src/features/auth/session-bridge.tsx)
+  // — chega sem cookie ainda, é o próprio fragmento da URL que estabelece a sessão.
+  '/bridge',
+];
 
 function isPublicPath(pathname: string): boolean {
   return (
